@@ -268,7 +268,7 @@ class QCWindow(QMainWindow):
             raise
         self._scan_config = deepcopy(config)
         timing = config["timecode"]
-        args = ["inspect", self.source.text(), "--preset", config["preset"], "--config", str(snapshot),
+        args = ["inspect", self.source.text(), "--verbose", "--preset", config["preset"], "--config", str(snapshot),
                 "--frame-rate", timing["frame_rate"], "--timecode-source", timing["source"],
                 "--output", str(output)]
         if timing["source"] == "MANUAL":

@@ -41,7 +41,17 @@ BASE = {
 
 
 class ConfigError(ValueError):
-    pass
+    def __init__(self, message, field=None):
+        super().__init__(message)
+        self.field = field
+
+
+class MarkedMapping(dict):
+    """YAML source locations, discarded when resolving into the canonical dict."""
+    def __init__(self):
+        super().__init__()
+        self.locations = {}
+
 
 
 class UniqueLoader(yaml.SafeLoader):
@@ -49,11 +59,12 @@ class UniqueLoader(yaml.SafeLoader):
 
 
 def _mapping(loader, node, deep=False):
-    result = {}
+    result = MarkedMapping()
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)
         if not isinstance(key, str) or key in result:
-            raise ConfigError(f"Duplicate or non-text YAML key: {key!r}")
+            raise ConfigError(f"Duplicate or non-text YAML key at line {key_node.start_mark.line+1}, column {key_node.start_mark.column+1}: {key!r}")
+        result.locations[key] = (value_node.start_mark.line+1, value_node.start_mark.column+1)
         result[key] = loader.construct_object(value_node, deep=deep)
     return result
 
@@ -63,11 +74,11 @@ UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _ma
 
 def merge(base: dict, supplied: dict, prefix="") -> None:
     if not isinstance(supplied, dict):
-        raise ConfigError(f"{prefix or 'Configuration'} must be a mapping")
+        raise ConfigError(f"{prefix or 'Configuration'} must be a mapping", prefix.rstrip("."))
     for key, value in supplied.items():
         name = f"{prefix}{key}"
         if key not in base:
-            raise ConfigError(f"Unknown setting: {name}")
+            raise ConfigError(f"Unknown setting: {name}", name)
         if isinstance(base[key], dict):
             merge(base[key], value, name + ".")
         else:
@@ -78,7 +89,7 @@ def validate(c: dict) -> None:
     try:
         validate_settings(c["timecode"])
     except ValueError as exc:
-        raise ConfigError(str(exc)) from exc
+        raise ConfigError(str(exc), "timecode") from exc
 
     def number(value, name, low, high, nullable=False, integer=False):
         if value is None and nullable:
@@ -87,59 +98,59 @@ def validate(c: dict) -> None:
                 or not low <= value <= high or not math.isfinite(value)
                 or (integer and not isinstance(value, int))):
             raise ConfigError(f"{name} must be {'an integer' if integer else 'a number'} in [{low}, {high}]"
-                              + (" or null" if nullable else ""))
+                              + (" or null" if nullable else ""), name.removesuffix(" item"))
 
     for section, key in [("loudness", "enabled"), ("bwf", "required"),
                          ("bwf", "warn_if_missing"), ("pcm", "preferred"), ("clipping", "fail")]:
         if type(c[section][key]) is not bool:
-            raise ConfigError(f"{section}.{key} must be true or false")
+            raise ConfigError(f"{section}.{key} must be true or false", f"{section}.{key}")
     number(c["sample_rate"]["required"], "sample_rate.required", 1000, 768000, True, True)
     for key in ("preferred", "required"):
         number(c["bit_depth"][key], f"bit_depth.{key}", 1, 64, True, True)
         if c["bit_depth"][key] is not None and c["bit_depth"][key] not in BIT_DEPTHS:
-            raise ConfigError(f"bit_depth.{key} must be one of {BIT_DEPTHS} or null")
+            raise ConfigError(f"bit_depth.{key} must be one of {BIT_DEPTHS} or null", f"bit_depth.{key}")
     bits = c["bit_depth"]
     if bits["required"] is not None and bits["preferred"] not in (None, bits["required"]):
-        raise ConfigError("bit_depth.required and bit_depth.preferred conflict")
+        raise ConfigError("bit_depth.required and bit_depth.preferred conflict", "bit_depth.required")
     allowed = c["channels"]["allowed"]
     if allowed is not None:
         if not isinstance(allowed, list) or not allowed:
-            raise ConfigError("channels.allowed must be a non-empty list of counts or null")
+            raise ConfigError("channels.allowed must be a non-empty list of counts or null", "channels.allowed")
         for n in allowed:
             number(n, "channels.allowed item", 1, 256, integer=True)
     number(c["loudness"]["target_lufs"], "loudness.target_lufs", -70, 0, True)
     number(c["loudness"]["tolerance"], "loudness.tolerance", 0, 20, True)
     if c["loudness"]["target_lufs"] is not None:
         if c["loudness"]["tolerance"] is None or not c["loudness"]["enabled"]:
-            raise ConfigError("A loudness target requires loudness.enabled and a numeric tolerance")
+            raise ConfigError("A loudness target requires loudness.enabled and a numeric tolerance", "loudness.target_lufs")
     elif c["loudness"]["tolerance"] is not None:
-        raise ConfigError("loudness.tolerance requires a loudness.target_lufs")
+        raise ConfigError("loudness.tolerance requires a loudness.target_lufs", "loudness.tolerance")
     number(c["true_peak"]["maximum"], "true_peak.maximum", -99, 20, True)
     number(c["clipping"]["consecutive_samples"], "clipping.consecutive_samples", 2, 10000, integer=True)
     number(c["duration_tolerance_ms"], "duration_tolerance_ms", 0, 60000)
     number(c["large_duration_difference_ms"], "large_duration_difference_ms", 0, 3600000)
     number(c["process_timeout_seconds"], "process_timeout_seconds", 1, 604800, True)
     if not isinstance(c["expected_stems"], list) or any(s not in ("DIA", "FX", "MX", "ME", "FULLMIX") for s in c["expected_stems"]):
-        raise ConfigError("expected_stems must be a list using DIA, FX, MX, ME, FULLMIX")
+        raise ConfigError("expected_stems must be a list using DIA, FX, MX, ME, FULLMIX", "expected_stems")
     d = c["defects"]
     for name, section in [("defects", d), ("defects.clicks", d["clicks"]), ("defects.dropouts", d["dropouts"])]:
         if type(section["enabled"]) is not bool:
-            raise ConfigError(f"{name}.enabled must be true or false")
+            raise ConfigError(f"{name}.enabled must be true or false", f"{name}.enabled")
     number(d["max_candidates"], "defects.max_candidates", 1, 100000, integer=True)
     number(d["issues"]["cross_channel_merge_ms"], "defects.issues.cross_channel_merge_ms", 0, 10)
     for key in ("snippet_before_seconds", "snippet_after_seconds"):
         number(d[key], f"defects.{key}", 0, 30)
     if d["clicks"]["sensitivity"] not in ("low", "medium", "high"):
-        raise ConfigError("defects.clicks.sensitivity must be low, medium or high")
-    number(d["clicks"]["min_local_deviation_db"], "click deviation", 3, 80)
-    number(d["clicks"]["max_duration_ms"], "click duration", 0.05, 20)
+        raise ConfigError("defects.clicks.sensitivity must be low, medium or high", "defects.clicks.sensitivity")
+    number(d["clicks"]["min_local_deviation_db"], "defects.clicks.min_local_deviation_db", 3, 80)
+    number(d["clicks"]["max_duration_ms"], "defects.clicks.max_duration_ms", 0.05, 20)
     number(d["clicks"]["merge_gap_ms"], "defects.clicks.merge_gap_ms", 0, 10)
     for key in ("zero_run_ms", "min_duration_ms", "max_duration_ms"):
         number(d["dropouts"][key], f"defects.dropouts.{key}", 0.1, 5000)
     if d["dropouts"]["min_duration_ms"] > d["dropouts"]["max_duration_ms"]:
-        raise ConfigError("Dropout minimum duration exceeds maximum duration")
-    number(d["dropouts"]["relative_level_drop_db"], "dropout level drop", 6, 100)
-    number(d["dropouts"]["fail_zero_run_ms"], "fail_zero_run_ms", 0.1, 86400000, True)
+        raise ConfigError("Dropout minimum duration exceeds maximum duration", "defects.dropouts.min_duration_ms")
+    number(d["dropouts"]["relative_level_drop_db"], "defects.dropouts.relative_level_drop_db", 6, 100)
+    number(d["dropouts"]["fail_zero_run_ms"], "defects.dropouts.fail_zero_run_ms", 0.1, 86400000, True)
 
 
 def _timecode_aliases(settings):
@@ -156,16 +167,29 @@ def _timecode_aliases(settings):
 
 def load_config(path: Path | None = None, preset: str | None = None, timecode_overrides: dict | None = None) -> dict:
     supplied = {}
-    if path is not None:
-        try:
+    try:
+        if path is not None:
             if path.stat().st_size > 65536:
                 raise ConfigError("Configuration exceeds 64 KiB")
             supplied = yaml.load(path.read_text(encoding="utf-8"), Loader=UniqueLoader)
-        except (OSError, UnicodeError, yaml.YAMLError, RecursionError) as exc:
-            raise ConfigError(f"Cannot read configuration: {exc}") from exc
-        if not isinstance(supplied, dict):
-            raise ConfigError("Configuration must be a YAML mapping")
-    return resolve_config(supplied, preset, timecode_overrides)
+            if not isinstance(supplied, dict):
+                raise ConfigError("Configuration must be a YAML mapping")
+        return resolve_config(supplied, preset, timecode_overrides)
+    except ConfigError as exc:
+        if path is None:
+            raise
+        location, current = None, supplied
+        for key in (exc.field or "").split("."):
+            if not isinstance(current, MarkedMapping) or key not in current:
+                break
+            location = current.locations[key]
+            current = current[key]
+        where = f"{path}"
+        if location:
+            where += f":line {location[0]}, column {location[1]}"
+        raise ConfigError(f"{where}: {exc}", exc.field) from exc
+    except (OSError, UnicodeError, yaml.YAMLError, RecursionError) as exc:
+        raise ConfigError(f"Cannot read configuration {path}: {exc}") from exc
 
 
 def resolve_config(supplied=None, preset=None, timecode_overrides=None):
@@ -177,7 +201,7 @@ def resolve_config(supplied=None, preset=None, timecode_overrides=None):
         supplied["timecode"] = _timecode_aliases(supplied["timecode"])
     selected = preset or supplied.get("preset", "FILM_48K")
     if selected not in PRESETS:
-        raise ConfigError(f"Unknown preset: {selected!r}; choose {', '.join(PRESETS)}")
+        raise ConfigError(f"Unknown preset: {selected!r}; choose {', '.join(PRESETS)}", "preset")
     result = deepcopy(BASE)
     if selected == "BROADCAST_EBU_R128":
         result["loudness"].update(target_lufs=-23.0, tolerance=0.5)

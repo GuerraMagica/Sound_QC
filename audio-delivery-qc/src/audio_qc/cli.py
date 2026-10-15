@@ -8,6 +8,7 @@ import time
 from . import __version__
 from .config import ConfigError, PRESETS, load_config
 from .consistency import group_checks
+from .diagnostics import RunLog
 from .models import AudioFile, Check, Status
 from .process import ToolError, check_tools
 from .reports import build_report, write_reports
@@ -34,7 +35,9 @@ def parser():
     toggle.add_argument("--defects", action="store_true", help="Enable deterministic click/dropout candidates")
     toggle.add_argument("--no-defects", action="store_true", help="Disable candidate detection")
     inspect.add_argument("--export-defect-snippets", action="store_true", help="Enable defects and export evidence WAVs")
-    inspect.add_argument("--quiet", action="store_true", help="Hide progress; retain summary and errors")
+    verbosity = inspect.add_mutually_exclusive_group()
+    verbosity.add_argument("--quiet", action="store_true", help="Summary and errors only (also the default)")
+    verbosity.add_argument("--verbose", action="store_true", help="Show per-file measurement progress and diagnostics")
     return root
 
 
@@ -58,10 +61,13 @@ def main(argv=None):
     if argv and argv[0] not in ("inspect", "gui") and not argv[0].startswith("-"):
         argv.insert(0, "inspect")
     args = parser().parse_args(argv)
-    if args.command == "gui":
-        from .gui import main as gui_main
-        return gui_main()
+    logs = RunLog(verbose=getattr(args, "verbose", False))
+    log = logs.logger
+    output = None
     try:
+        if args.command == "gui":
+            from .gui import main as gui_main
+            return gui_main()
         tc_overrides = {}
         if args.frame_rate is not None:
             tc_overrides["frame_rate"] = args.frame_rate
@@ -88,10 +94,11 @@ def main(argv=None):
         versions = check_tools()
         paths, notices = discover(source)
         output = create_output(source, args.output)
+        logs.attach(output)
         started = time.monotonic()
         files = []
-        if not args.quiet:
-            print(f"AUDIO DELIVERY QC INSPECTOR {__version__}\n{len(paths)} audio file(s) · {config['preset']}\nReports: {output}", flush=True)
+        log.debug("AUDIO DELIVERY QC INSPECTOR %s · %s files · %s · Reports: %s",
+                  __version__, len(paths), config["preset"], output)
         if not paths:
             notices.append(Check("empty_scan", Status.WARNING, "No supported audio files found in the source folder"))
         for i, path in enumerate(paths, 1):
@@ -99,10 +106,12 @@ def main(argv=None):
 
             def progress(phase, fraction):
                 now = time.monotonic()
-                if not args.quiet and (phase != last[1] or now-last[0] >= 2):
-                    print(f"[{i}/{len(paths)}] {path.name} · {phase} · {max(0, min(100, fraction*100)):.0f}%", flush=True)
+                if phase != last[1] or now-last[0] >= 2:
+                    log.debug("[%s/%s] %s · %s · %.0f%%", i, len(paths), path.name, phase,
+                              max(0, min(100, fraction*100)))
                     last[:] = [now, phase]
 
+            audio = None
             try:
                 audio = inspect_file(path, config, args.hash, progress)
                 if args.export_defect_snippets:
@@ -110,23 +119,42 @@ def main(argv=None):
                     export_snippets(audio, output, config, i)
             except Exception as exc:
                 # Unexpected errors remain visible but cannot abort the delivery.
-                audio = AudioFile(str(path), path.name)
+                log.error("Unexpected inspection error for %s", path, exc_info=True)
+                if audio is None:
+                    audio = AudioFile(str(path), path.name)
                 audio.add("unexpected_inspection_error", Status.FAIL, f"{type(exc).__name__}: {exc}")
             files.append(audio)
-            if not args.quiet:
-                print(f"[{i}/{len(paths)}] {audio.status} · {path.name}", flush=True)
+            log.debug("[%s/%s] %s · %s", i, len(paths), audio.status, path.name)
+            for check in audio.checks:
+                log.debug("%s · %s · %s · %s", path.name, check.status, check.code, check.message)
+            logs.warnings()
         checks = notices + group_checks(files, config)
+        for message in logs.warnings():
+            checks.append(Check("diagnostic_log", Status.WARNING, message))
         report = build_report(source, files, checks, config, versions, time.monotonic()-started)
         write_reports(report, output)
-        print(f"{report['status']} · {len(files)} files · {report['summary']['PASS']} PASS · {report['summary']['WARNING']} WARNING · {report['summary']['FAIL']} FAIL")
-        print(f"HTML report: {output / 'QC_REPORT.html'}")
+        log.info("%s · %s files · %s PASS · %s WARNING · %s FAIL", report["status"], len(files),
+                 report["summary"]["PASS"], report["summary"]["WARNING"], report["summary"]["FAIL"])
+        log.info("HTML report: %s", output / "QC_REPORT.html")
         return 1 if report["status"] == "FAIL" else 0
     except (ConfigError, ToolError, ValueError, OSError) as exc:
-        print(f"audio-qc: {exc}", file=sys.stderr)
+        log.error("audio-qc: %s", exc, exc_info=output is not None)
+        logs.warnings()
         return 2
     except KeyboardInterrupt:
-        print("\naudio-qc: Scan cancelled; source files were opened read-only. Partial evidence may remain in the new report folder.", file=sys.stderr)
+        log.warning("audio-qc: Scan cancelled; source files were opened read-only. Partial evidence may remain in the new report folder.")
         return 130
+    except Exception:
+        log.error("❌ An unexpected error occurred.", exc_info=True)
+        logs.warnings()
+        if logs.error_saved():
+            log.error("Check error.log for more details: %s", output / "error.log")
+        else:
+            log.error("Error details could not be saved (report folder unavailable or log write failed).")
+        return 2
+    finally:
+        logs.warnings()
+        logs.close()
 
 
 if __name__ == "__main__":

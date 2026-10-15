@@ -2,7 +2,7 @@
 
 A local, read-only technical inspector for film and TV audio deliveries: Full Mix, M&E, DIA, FX, MX, stems and printmasters. It scans a folder recursively, or one file, and creates **QC_REPORT.html**, **QC_REPORT.csv**, and **QC_REPORT.json**, plus a candidate-level **QC_DEFECTS.csv**, in a new, separate report folder.
 
-**Sources stay untouched.** The application does not normalize, repair, rename, move, rewrite headers, change metadata or deliberately change source timestamps. Sources are opened for reading. There are no network clients, telemetry, uploads, cloud processing, AI APIs or automatic crash reports. FFmpeg input protocols are restricted to local files/pipes. No internet is needed after installation.
+**Sources stay untouched.** The application does not normalize, repair, rename, move, rewrite headers, change metadata or deliberately change source timestamps. Sources are opened for reading. There are no network clients, telemetry, uploads, cloud processing, AI APIs or automatic crash-report uploads. FFmpeg input protocols are restricted to local files/pipes. No internet is needed after installation.
 
 ## Start here on this Mac
 
@@ -59,11 +59,21 @@ audio-qc gui
 audio-qc inspect --help
 ```
 
-Quote paths containing spaces. `--export-defect-snippets` enables detection too. `--no-defects` overrides YAML enabling detection. `--quiet` hides progress but keeps the final summary/errors.
+Quote paths containing spaces. `--export-defect-snippets` enables detection too. `--no-defects` overrides YAML enabling detection. `--verbose` shows per-file progress and diagnostics. Normal mode prints the summary and errors; `--quiet` explicitly selects that same concise output. The GUI requests verbose progress automatically.
 
 A timestamped report folder is created **beside** the source by default. Report dates and folder timestamps are explicitly UTC. A custom `--output` must be a **new** directory outside the scanned source folder. Existing reports are never overwritten. Nested symbolic links are skipped and reported to avoid traversal cycles; use actual source locations.
 
 Exit codes: **0** completed with PASS/WARNING/INFO; **1** completed with FAIL; **2** configuration/dependency/input/report-writing error; **130** cancelled. An empty folder still produces the report set with WARNING and a header-only defect CSV. One corrupt file cannot abort the delivery. Ctrl-C terminates the current decoder; partial evidence may remain in the new report folder.
+
+## Operational diagnostics
+
+Each new report directory receives a local `scan.log` with timestamps and log levels. Unexpected failures and report-writing errors also create `error.log` with technical details. Logs rotate at 2 MiB with two backups per log. They are never uploaded by the application. Logs can include source paths and exception details; share them deliberately.
+
+Unexpected top-level failures return exit code 2 with a concise message instead of a console traceback. If a full disk or permission problem prevents saving the log, the console explicitly says so. Errors before a new report directory is created do not write logs beside source media or into an existing report directory. A failed report write is never announced as a completed report; partial outputs may remain and should not be treated as a completed QC run. Per-file failures still permit inspection of other files, and an unexpected snippet-export failure retains the measurements already collected for that file.
+
+YAML uses the existing strict canonical validator and safe loader. Unknown keys, duplicate keys and invalid types/values are rejected before scanning; loaded YAML validation errors now include the source path and field location where available. No second configuration schema or new runtime dependency was introduced.
+
+Processing remains sequential. Parallel jobs are deferred until their cancellation, memory bounds, source-read-only behavior and deterministic report ordering are validated. Measurement calculations, detector thresholds and QC policy are unchanged.
 
 ## Checks and scope
 
@@ -252,6 +262,14 @@ Issues stay in earliest-start order. Their legacy scalar fields describe the ear
 Offsets and full-precision timestamps are relative to file start; sample indices are zero-based, and channels are one-based in source order. The separate displayed TC follows the selected BWF/file-relative/manual origin. Leading/trailing silence and context-free edge events generally produce no candidates. Intentional short edits/percussion can trigger warnings; noise can conceal defects. Events beyond configured durations and subjective audibility remain limitations. Default candidates are WARNING; only an explicitly configured exact zero-run rule can fail.
 
 `--export-defect-snippets` writes one WAV per consolidated issue in `defect_snippets/` inside the report folder: one second before the full issue's first sample and one second after its last sample, clipped to source boundaries. A 5.1 issue affecting channels 1, 2 and 5 produces one six-channel snippet, preserving original channel count/order, rate and gain without downmixing. Evidence is converted to 32-bit float (high-resolution formats may have representational rounding). It does not inherit BWF metadata. Clicking an Evidence WAV link requests a new tab/window using `target="_blank" rel="noopener"`; local relative paths and the report CSP are retained. Browser settings may instead download the WAV; use a DAW/player if the browser cannot play multichannel float WAV. See `M31_VALIDATION.md` for consolidation and evidence validation.
+
+## Continuous integration and dependency audit
+
+The repository-root `.github/workflows/tests.yml` runs the complete suite on pushes and pull requests, with Python 3.11 and 3.14 on Ubuntu 24.04. It installs FFmpeg/ffprobe and PySide6 and runs the GUI tests offscreen. Synthetic WAVs are generated during tests; professional source media is not uploaded. Workflow permissions are read-only, checkout credentials are not persisted, and the official checkout/setup-python actions are pinned to commit hashes.
+
+A separate CI job runs `pip-audit --skip-editable --strict` against the installed dependencies. This development check uses the public vulnerability service; the local QC application remains offline. Known advisories or audit-service failures fail that job instead of being suppressed. The audit does not automatically upgrade packages and is not a proof that dependencies have no vulnerabilities.
+
+See [ROBUSTNESS_VALIDATION.md](ROBUSTNESS_VALIDATION.md) for the local tests, dependency audit, source-integrity smoke and hosted-CI limitation.
 
 ## Tests and demonstration
 
