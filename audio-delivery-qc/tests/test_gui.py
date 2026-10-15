@@ -9,21 +9,7 @@ pytest.importorskip("PySide6")
 from PySide6.QtCore import QProcess
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
-from audio_qc.gui_window import QCWindow
 from audio_qc.timecode import RATES
-
-
-@pytest.fixture
-def window(qapp):
-    app = qapp
-    win = QCWindow()
-    yield win
-    if win.process.state() != QProcess.NotRunning:
-        win.process.kill()
-        win.process.waitForFinished(5000)
-    win.close()
-    win.deleteLater()
-    app.processEvents()
 
 
 def test_gui_reporting_controls_and_defaults(window):

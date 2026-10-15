@@ -12,20 +12,6 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QFileDialog
 
 from audio_qc.config import ConfigError, load_config
-from audio_qc.gui_window import QCWindow
-
-
-@pytest.fixture
-def window(qapp):
-    app = qapp
-    win = QCWindow()
-    yield win
-    if win.process.state() != QProcess.NotRunning:
-        win.process.kill()
-        win.process.waitForFinished(5000)
-    win.close()
-    win.deleteLater()
-    app.processEvents()
 
 
 def configure(window):
@@ -150,7 +136,7 @@ def test_invalid_load_keeps_current_state_and_cancel_changes_nothing(window,tmp_
     assert window.effective_config()==before
 
 
-def test_gui_save_load_and_worker_use_same_resolved_policy(window,tmp_path,monkeypatch):
+def test_gui_save_load_and_worker_use_same_resolved_policy(window,tmp_path,monkeypatch,make_window):
     configure(window)
     window.frame_rate.setCurrentText('23.976')
     window.defects.setChecked(True)
@@ -159,7 +145,7 @@ def test_gui_save_load_and_worker_use_same_resolved_policy(window,tmp_path,monke
     monkeypatch.setattr(QFileDialog,'getSaveFileName',lambda *a: (str(path),''))
     window.save_button.click()
     assert load_config(path)==expected
-    second=QCWindow()
+    second=make_window()
     try:
         assert second.load_yaml(path)
         assert second.effective_config()==expected

@@ -32,4 +32,38 @@ def qapp():
     yield app
     app.processEvents()
     QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
-    app.quit()
+    # Destroy Qt while Python and its wrappers are still alive, rather than
+    # leaving QApplication teardown to interpreter finalization.
+    app.shutdown()
+
+
+@pytest.fixture
+def make_window(qapp):
+    from PySide6.QtCore import QCoreApplication, QEvent, QProcess
+    from shiboken6 import isValid
+    from audio_qc.gui_window import QCWindow
+
+    windows = []
+
+    def create():
+        window = QCWindow()
+        windows.append(window)
+        return window
+
+    yield create
+    for window in reversed(windows):
+        if window.process.state() != QProcess.NotRunning:
+            window.process.kill()
+            window.process.waitForFinished(5000)
+        window.close()
+        window.deleteLater()
+    # processEvents alone does not deliver DeferredDelete without app.exec().
+    # Keep Python references alive until Qt has deleted every window/child.
+    QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
+    qapp.processEvents()
+    assert all(not isValid(window) for window in windows)
+
+
+@pytest.fixture
+def window(make_window):
+    return make_window()

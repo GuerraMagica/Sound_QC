@@ -62,6 +62,19 @@ Primary implementation references: [GitHub Python CI documentation](https://docs
 
 ## Remaining limits
 
-The workflow has been added locally but has not yet run on GitHub; hosted Linux/Python-version results are unverified until pushed. The local suite is verified on this Mac. No new native GUI visual check was performed. Logs are diagnostic artifacts, not a transaction that makes partial report sets usable after an I/O failure. Runtime sources are always opened read-only.
+The initial local validation preceded the first GitHub run; the CI follow-up below records the subsequently discovered platform failures and corrections. No new native GUI visual check was performed. Logs are diagnostic artifacts, not a transaction that makes partial report sets usable after an I/O failure. Runtime sources are always opened read-only.
 
 Parallel `--jobs` remains deferred in favor of reliability; changing concurrency also requires coordinated cancellation, bounded work scheduling and deterministic ordering tests. No measurement formula, preset default, defect threshold or M3/M4 architectural boundary changed.
+
+
+## GitHub Actions follow-up (2026-10-15)
+
+The first hosted run, [38808334416](https://github.com/GuerraMagica/Sound_QC/actions/runs/38808334416), exposed three CI/platform problems:
+
+- `pip-audit --skip-editable --strict` treats the skipped editable project as a collection error. This was an audit configuration failure, not a reported vulnerability. CI now runs `pip check`, inventories all installed packages except the unpublished local project, and audits those exact versions with `--strict --no-deps --disable-pip`. All installed application dependencies remain included; no advisory is ignored and no dependency is automatically upgraded.
+- Ubuntu's FFmpeg 6 could not assign an unknown mono/stereo layout through `aformat`. The same conventional layout is now assigned at input using the probed physical channel count. Unknown multichannel layouts remain rejected. EBU R128 options, channel samples/order and QC thresholds are unchanged.
+- Qt objects outlived the GUI tests and crashed during interpreter shutdown. Tests now share a session application, explicitly flush deferred window deletion (including secondary windows), verify deletion, and shut down Qt before interpreter finalization. No GUI test is skipped or subprocess failure suppressed.
+
+One golden float from `log10` differs by one IEEE-754 ULP between macOS ARM and Linux x86. Baseline comparisons now allow at most one ULP for floats, with a test rejecting two ULPs and changes to sample indices/status. The golden fixtures, integer samples, hashes and policy decisions remain unchanged.
+
+Local validation of the first correction: 37 focused tests passed in 5.85s; 496 full-suite tests passed in 17.26s; corrected dependency audit exited 0 with no known vulnerabilities. Hosted run [38809582503](https://github.com/GuerraMagica/Sound_QC/actions/runs/38809582503) confirmed a successful audit and all 496 tests passing on both Python versions (3.11: 29.38s; 3.14: 35.03s), but Python 3.11 still aborted at Qt shutdown. The additional deterministic widget/application cleanup addresses that remaining failure; its final hosted result is recorded by the Actions run for this commit. Validation after that cleanup: 20 focused GUI tests passed in 1.05s; all 496 tests passed in 17.69s, exit 0.
