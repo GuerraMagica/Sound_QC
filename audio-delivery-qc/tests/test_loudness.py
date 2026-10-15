@@ -68,3 +68,25 @@ def test_intersample_peak_exceeds_sample_peak(tmp_path, config):
     assert a.measurements["sample_peak_dbfs"] < 0
     assert a.measurements["true_peak_dbtp"] > 2
     assert a.measurements["true_peak_dbtp"] > a.measurements["sample_peak_dbfs"] + 2
+
+
+@pytest.mark.parametrize("channels,layout,guess", [(1, None, "1"), (2, None, "2"),
+                                                   (6, "5.1", "0")])
+def test_known_mono_stereo_input_layout_without_filter_relabel(monkeypatch, channels, layout, guess):
+    from contextlib import contextmanager
+    from io import BytesIO
+    from audio_qc.models import AudioFile
+    from audio_qc.loudness import measure_loudness
+    commands = []
+    @contextmanager
+    def stream(args, timeout, feed):
+        commands.append(args)
+        yield BytesIO()
+    monkeypatch.setattr("audio_qc.loudness.stream_process", stream)
+    audio = AudioFile("/fixture.wav", "fixture.wav", channels=channels, channel_layout=layout)
+    assert "loudness_unavailable" in measure_loudness(audio.path, audio)
+    args, = commands
+    assert args[args.index("-guess_layout_max") + 1] == guess
+    assert args.index("-guess_layout_max") < args.index("-i")
+    assert args[args.index("-af") + 1] == "ebur128=metadata=1:peak=true:dualmono=false,ametadata=mode=print"
+    assert "-ac" not in args and "-ar" not in args

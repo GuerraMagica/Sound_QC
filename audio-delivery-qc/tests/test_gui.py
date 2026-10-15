@@ -14,14 +14,15 @@ from audio_qc.timecode import RATES
 
 
 @pytest.fixture
-def window():
-    app = QApplication.instance() or QApplication([])
+def window(qapp):
+    app = qapp
     win = QCWindow()
     yield win
     if win.process.state() != QProcess.NotRunning:
         win.process.kill()
         win.process.waitForFinished(5000)
     win.close()
+    win.deleteLater()
     app.processEvents()
 
 

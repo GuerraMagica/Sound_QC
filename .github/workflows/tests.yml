@@ -56,5 +56,11 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install -e ".[test,gui]" pip-audit
+      - name: Verify and inventory installed dependencies
+        run: |
+          python -m pip check
+          # Exclude only this unpublished local project, not its dependencies.
+          # --skip-editable still yields a skipped result that --strict rejects.
+          python -m pip list --format=freeze --exclude audio-delivery-qc > audit-requirements.txt
       - name: Audit installed dependencies (no automatic upgrades)
-        run: python -m pip_audit --skip-editable --strict
+        run: python -m pip_audit --strict --no-deps --disable-pip -r audit-requirements.txt

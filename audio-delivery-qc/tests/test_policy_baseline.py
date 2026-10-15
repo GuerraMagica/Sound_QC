@@ -1,5 +1,6 @@
 """Golden data captured from M2.1 before the M3 production refactor."""
 import json
+import math
 from pathlib import Path
 
 import numpy as np
@@ -61,6 +62,38 @@ def normalized(audio, folder):
     return result
 
 
+def assert_baseline_matches(actual, expected):
+    """Keep golden facts exact apart from one IEEE-754 ULP for libm floats.
+
+    ARM macOS and x86 Linux log10 differ by one ULP for the same PCM sample.
+    This is a test-platform allowance, not a measurement rounding or QC margin.
+    Integer sample positions, hashes, checks and statuses remain exact.
+    """
+    if isinstance(expected, dict):
+        assert actual.keys() == expected.keys()
+        for key in expected:
+            assert_baseline_matches(actual[key], expected[key])
+    elif isinstance(expected, list):
+        assert len(actual) == len(expected)
+        for left, right in zip(actual, expected):
+            assert_baseline_matches(left, right)
+    elif isinstance(expected, float):
+        assert type(actual) is float
+        assert abs(actual - expected) <= math.ulp(expected), (actual, expected)
+    else:
+        assert actual == expected
+
+
+def test_baseline_allows_one_ulp_but_not_numeric_or_policy_regressions():
+    expected = -1.8732272847067915
+    adjacent = math.nextafter(expected, math.inf)
+    assert_baseline_matches(adjacent, expected)
+    for actual, original in ((math.nextafter(adjacent, math.inf), expected),
+                             (2529768, 2529767), ("WARNING", "PASS")):
+        with pytest.raises(AssertionError):
+            assert_baseline_matches(actual, original)
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize('case', CASES)
 def test_pre_m3_reports_and_decisions_unchanged(tmp_path, case):
@@ -69,7 +102,7 @@ def test_pre_m3_reports_and_decisions_unchanged(tmp_path, case):
     policy = baseline_policy(case)
     files = [inspect_file(path, policy, with_hash=True) for path in paths]
     golden = json.loads((Path(__file__).parent/'fixtures'/'m3_baseline.json').read_text())
-    assert [normalized(audio, source) for audio in files] == golden[case]
+    assert_baseline_matches([normalized(audio, source) for audio in files], golden[case])
     report = build_report(source, files, [], policy, {}, 0)
     output = tmp_path/'reports'
     output.mkdir()

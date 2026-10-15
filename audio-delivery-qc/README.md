@@ -267,7 +267,7 @@ Offsets and full-precision timestamps are relative to file start; sample indices
 
 The repository-root `.github/workflows/tests.yml` runs the complete suite on pushes and pull requests, with Python 3.11 and 3.14 on Ubuntu 24.04. It installs FFmpeg/ffprobe and PySide6 and runs the GUI tests offscreen. Synthetic WAVs are generated during tests; professional source media is not uploaded. Workflow permissions are read-only, checkout credentials are not persisted, and the official checkout/setup-python actions are pinned to commit hashes.
 
-A separate CI job runs `pip-audit --skip-editable --strict` against the installed dependencies. This development check uses the public vulnerability service; the local QC application remains offline. Known advisories or audit-service failures fail that job instead of being suppressed. The audit does not automatically upgrade packages and is not a proof that dependencies have no vulnerabilities.
+A separate CI job checks installed dependency consistency with `pip check`, exports their exact versions with `pip list --format=freeze --exclude audio-delivery-qc`, and runs `pip-audit --strict --no-deps --disable-pip` against that list. Only the unpublished local application is excluded; all its dependencies and the audit tools remain included. This development check uses the public vulnerability service; the local QC application remains offline. Known advisories or audit-service failures fail that job instead of being suppressed. The audit does not automatically upgrade packages and is not a proof that dependencies have no vulnerabilities.
 
 See [ROBUSTNESS_VALIDATION.md](ROBUSTNESS_VALIDATION.md) for the local tests, dependency audit, source-integrity smoke and hosted-CI limitation.
 

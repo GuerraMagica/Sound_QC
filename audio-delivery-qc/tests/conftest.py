@@ -20,3 +20,16 @@ def ffmpeg_requirement(request):
     if request.node.get_closest_marker("integration"):
         if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
             pytest.skip("Integration tests require local FFmpeg and ffprobe")
+
+
+@pytest.fixture(scope="session")
+def qapp():
+    """Keep one Qt application alive until all GUI widgets have been released."""
+    pytest.importorskip("PySide6")
+    from PySide6.QtCore import QCoreApplication, QEvent
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    yield app
+    app.processEvents()
+    QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
+    app.quit()

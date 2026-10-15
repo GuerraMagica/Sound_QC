@@ -77,10 +77,14 @@ def measure_loudness(path, audio, timeout=None, progress=None) -> dict:
         if progress and parser.frame_time >= 0:
             progress(parser.frame_time / audio.duration_seconds if audio.duration_seconds else 0)
 
-    # aformat only assigns the conventional mono/stereo layout when absent.
-    filters = (f"aformat=channel_layouts={layout}," if not audio.channel_layout else "")
-    filters += "ebur128=metadata=1:peak=true:dualmono=false,ametadata=mode=print"
-    args = ffmpeg_input(path, "info") + ["-af", filters, "-f", "null", "-"]
+    args = ffmpeg_input(path, "info")
+    if not audio.channel_layout:
+        # Only the already-probed mono/stereo counts reach here. Assign their
+        # conventional layout at input: FFmpeg 6 cannot relabel an unknown
+        # layout via aformat during filtering. Never guess multichannel roles.
+        args[args.index("-guess_layout_max") + 1] = str(audio.channels)
+    filters = "ebur128=metadata=1:peak=true:dualmono=false,ametadata=mode=print"
+    args += ["-af", filters, "-f", "null", "-"]
     with stream_process(args, timeout, feed) as output:
         while output.read(8192):
             pass
