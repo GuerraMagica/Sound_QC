@@ -1,0 +1,14 @@
+# Verified on macOS arm64 / Python 3.14.8; includes test, build and optional GUI dependencies.
+iniconfig==2.3.1
+numpy==2.5.3
+packaging==26.3
+pluggy==1.6.0
+Pygments==2.21.0
+PySide6==6.11.2
+PySide6_Addons==6.11.2
+PySide6_Essentials==6.11.2
+pytest==9.1.1
+PyYAML==6.0.3
+setuptools==84.0.0
+shiboken6==6.11.2
+wheel==0.48.0

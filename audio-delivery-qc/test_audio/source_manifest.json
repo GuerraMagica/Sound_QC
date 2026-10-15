@@ -1,0 +1,102 @@
+{
+  "test_audio/synthetic/stereo_48k.wav": {
+    "sha256": "60fd6f88d39dfff189cb6cb87548822d643fd341a04b3d7277fa4774b4265d84",
+    "mtime_ns": 1791403374312915126,
+    "size": 1152044
+  },
+  "test_audio/synthetic/quiet.wav": {
+    "sha256": "93fe5a8dc64eb438ff81787b8308ceb5ab67c0c457bbf1ab99d295cd86102f99",
+    "mtime_ns": 1791403374320430519,
+    "size": 576044
+  },
+  "test_audio/synthetic/RF64_BWF.wav": {
+    "sha256": "8027d23a9f9bd68d275b6d36e46c868a4ea9d205f1a85f5533574afc48eb65ea",
+    "mtime_ns": 1791403374352320940,
+    "size": 576718
+  },
+  "test_audio/synthetic/surround_51.wav": {
+    "sha256": "5347977718154f63fd52c8e298cbb6ab378a9a43addd9b6b554f982378458878",
+    "mtime_ns": 1791403374334921313,
+    "size": 3456068
+  },
+  "test_audio/synthetic/corrupt.wav": {
+    "sha256": "13b7b3fc9cb98b18fecbc88fa8b4d6f76e00837b6478cbd2313dbc62ee35e5d5",
+    "mtime_ns": 1791403374363280575,
+    "size": 19
+  },
+  "test_audio/synthetic/SCENE01_DIA.wav": {
+    "sha256": "cb267d45f58ca03f8c3b38cca8409c65172bebdfb4ddf8e264d2571db6afd827",
+    "mtime_ns": 1791403374305905768,
+    "size": 576682
+  },
+  "test_audio/synthetic/wrong_rate_44k.wav": {
+    "sha256": "456defdcd99194b7312072e2014fb93688d11a970f956a44abae625d39993abd",
+    "mtime_ns": 1791403374315144386,
+    "size": 529244
+  },
+  "test_audio/synthetic/surround_71.wav": {
+    "sha256": "70fa41e795f5b9fe59062dfcea0b3dcc7173b80b3a57c41d70e14daf5827e048",
+    "mtime_ns": 1791403374349809392,
+    "size": 4608068
+  },
+  "test_audio/synthetic/clipped.wav": {
+    "sha256": "9043766c4f4e0a512936a6e341cd96ffd2065fc2eb20929db223486cbbf5714c",
+    "mtime_ns": 1791403374318041345,
+    "size": 576044
+  },
+  "test_audio/synthetic/short_duration.wav": {
+    "sha256": "5e41520c7886c8d5510716f1e6b342c865fccfd9f57f506b2a6ec6df22e8119b",
+    "mtime_ns": 1791403374315849709,
+    "size": 144044
+  },
+  "test_audio/synthetic/SCENE01_FX.wav": {
+    "sha256": "ed40da64c2c4bf3a119bbc33bf39db79a156f4b975e54ce474cd843ed8557f06",
+    "mtime_ns": 1791403374308231901,
+    "size": 576682
+  },
+  "test_audio/synthetic/defects/zero_dropout.wav": {
+    "sha256": "d2c57eaf5118a889f4386fa1102ab251c492b429d6e73b45e86353f752c2a60f",
+    "mtime_ns": 1791403374358089650,
+    "size": 432044
+  },
+  "test_audio/synthetic/defects/intentional_silence.wav": {
+    "sha256": "437f06868782e61ee37b6a01d9d21b6cde66362a25d7b42683297d75dbc5679d",
+    "mtime_ns": 1791403374360083538,
+    "size": 432044
+  },
+  "test_audio/synthetic/defects/legitimate_transient.wav": {
+    "sha256": "764625713c49d117c43334b4dd3de5817751127f876893d535b5621d7186d0d0",
+    "mtime_ns": 1791403374363154994,
+    "size": 432044
+  },
+  "test_audio/synthetic/defects/channel_dropout.wav": {
+    "sha256": "7bd6311ba7eb98255cbda050ac6ddc003df61fcf670a25e424f7c22cff5136c5",
+    "mtime_ns": 1791403374362122592,
+    "size": 864044
+  },
+  "test_audio/synthetic/defects/multi_sample_click.wav": {
+    "sha256": "a7dcbd62ba0303c3665a4daf0a855c24894512f600614118262e7d9d58b6c96a",
+    "mtime_ns": 1791403374357066747,
+    "size": 432044
+  },
+  "test_audio/synthetic/defects/one_sample_click.wav": {
+    "sha256": "01a42bc124f9305361ca8e75a870ee1a222ad7c96a992f8a799803e65eb5ed59",
+    "mtime_ns": 1791403374356105095,
+    "size": 432044
+  },
+  "test_audio/synthetic/defects/clean_sine.wav": {
+    "sha256": "713355cfeff5fd216155d5697369841fd62ca4ee942bdf4721229ab1bac90677",
+    "mtime_ns": 1791403374355108109,
+    "size": 432044
+  },
+  "test_audio/synthetic/defects/attenuation_dropout.wav": {
+    "sha256": "8edebed89f66433afcace3f0335978b9f3f7e40a7154c187899a6e3272e892f2",
+    "mtime_ns": 1791403374359076969,
+    "size": 432044
+  },
+  "test_audio/synthetic/nested/Diálogo 日本語.wav": {
+    "sha256": "eaab6ead60711ac8ee72f60f8039624fc38fe350d9ed052a2697d44f5924cc54",
+    "mtime_ns": 1791403374322980399,
+    "size": 576044
+  }
+}

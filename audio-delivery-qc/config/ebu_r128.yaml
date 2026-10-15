@@ -1,0 +1,6 @@
+preset: BROADCAST_EBU_R128
+loudness:
+  target_lufs: -23
+  tolerance: 0.5
+true_peak:
+  maximum: -1

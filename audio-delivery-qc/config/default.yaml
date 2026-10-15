@@ -1,0 +1,35 @@
+# FILM_48K has no theatrical loudness target. Partial overrides are allowed.
+preset: FILM_48K
+sample_rate:
+  required: 48000
+bit_depth:
+  preferred: 24
+loudness:
+  enabled: true
+  target_lufs: null
+  tolerance: null
+true_peak:
+  maximum: null
+bwf:
+  required: false
+duration_tolerance_ms: 20
+timecode:
+  frame_rate: "25"
+  source: AUTO
+  manual_start: null
+defects:
+  enabled: false
+  issues:
+    cross_channel_merge_ms: 1.0
+  clicks:
+    enabled: true
+    sensitivity: medium
+    min_local_deviation_db: 12
+    max_duration_ms: 5
+    merge_gap_ms: 1.0
+  dropouts:
+    enabled: true
+    zero_run_ms: 5
+    relative_level_drop_db: 30
+    min_duration_ms: 2
+    max_duration_ms: 500

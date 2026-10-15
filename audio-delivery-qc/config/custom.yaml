@@ -1,0 +1,8 @@
+# Set only the rules required by your delivery specification.
+preset: CUSTOM
+sample_rate:
+  required: 48000
+channels:
+  allowed: [1, 2, 6, 8]
+defects:
+  enabled: true

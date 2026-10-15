@@ -1,0 +1,120 @@
+from html import escape
+import json
+from urllib.parse import quote
+from .specification import specification_rows
+
+
+def esc(value):
+    return escape(str(value), quote=True)
+
+
+def val(value, digits=2):
+    if value is None:
+        return "—"
+    if isinstance(value, bool):
+        return "Yes" if value else "No"
+    if isinstance(value, float):
+        return f"{value:.{digits}f}"
+    return esc(value)
+
+
+def badge(status):
+    status = status if status in ("PASS", "WARNING", "FAIL", "INFO") else "INFO"
+    return f'<span class="badge {status}">{status}</span>'
+
+
+def tc_label(tc, day):
+    return f'<span class="tc">{val(tc)}</span>' + (f' <small>(+{day}d)</small>' if day else '')
+
+
+def write_html(report, path):
+    s = report["summary"]
+    timing = report["timecode_reporting"]
+    specification = "".join(f"<tr><th>{esc(label)}</th><td>{esc(value)}</td></tr>"
+                            for label, value in specification_rows(report["configuration"]))
+    source_labels = {a["timecode_reporting"]["source_label"] for a in report["files"]}
+    starts = {(a["timecode_reporting"]["file_start_timecode"], a["timecode_reporting"]["file_start_day_offset"]) for a in report["files"]}
+    source_label = next(iter(source_labels)) if len(source_labels) == 1 else "Mixed — see each file" if source_labels else "No audio files"
+    start_label = tc_label(*next(iter(starts))) if len(starts) == 1 else "Varies by file — see file details" if starts else "—"
+    timing_header = (f'<p class="timing">Frame rate: <b>{esc(timing["frame_rate"]["label"])} fps</b> &nbsp; '
+                     f'TC source: <b>{esc(source_label)}</b> ({esc(timing["requested_source"])}) &nbsp; '
+                     f'File start TC: {start_label}</p>')
+    cards = "".join(f'<div class="card"><strong>{s[k]}</strong><span>{esc(k.replace("_", " "))}</span></div>'
+                    for k in ("total_files", "PASS", "WARNING", "FAIL", "INFO", "defect_issues"))
+    rows, details = [], []
+    for index, a in enumerate(report["files"], 1):
+        m, b = a["measurements"], a["bwf"]
+        origin = a["timecode_reporting"]
+        origin_line = (f'<p>TC source: <b>{esc(origin["source_label"])}</b> · File start TC: '
+                       f'{tc_label(origin["file_start_timecode"], origin["file_start_day_offset"])} · '
+                       f'Frame rate: {esc(origin["frame_rate"]["label"])} fps</p>')
+        if origin["fallback_reason"]:
+            origin_line += f'<p class="path">AUTO fallback: {esc(origin["fallback_reason"])}</p>'
+        fields = [a["duration_seconds"], a["sample_rate"], a["bit_depth"], a["channels"], a["channel_layout"],
+                  m.get("sample_peak_dbfs"), m.get("true_peak_dbtp"), m.get("integrated_lufs"), m.get("lra_lu"),
+                  b.get("present"), b.get("time_reference")]
+        rows.append(f'<tr><td>{badge(a["status"])}</td><th scope="row"><a href="#file-{index}">{esc(a["filename"])}</a></th>'
+                    + "".join(f"<td>{val(v, 3)}</td>" for v in fields) + "</tr>")
+        checks = "".join(f'<li>{badge(c["status"])} <b>{esc(c["code"])}</b> · {esc(c["message"])}</li>' for c in a["checks"])
+        events = []
+        for e in a["defects"]:
+            snippet = (f'<a href="{quote(e["snippet"], safe="/")}" target="_blank" rel="noopener">Evidence WAV</a>' if e["snippet"] else "—")
+            evidence = {"sample_index": e["sample_index"], "timestamp_seconds": e["timestamp_seconds"],
+                        "timecode_basis": e["timecode_basis"], "timecode_frame_rate": e["timecode_frame_rate"],
+                        "timecode_day_offset": e["timecode_day_offset"],
+                        "merged_candidate_count": e["merged_candidate_count"],
+                        "cluster_first_sample": e["cluster_first_sample"],
+                        "cluster_last_sample": e["cluster_last_sample"], "measurements": e["measurements"],
+                        "channels": e.get("channels", [e["channel"]]),
+                        "channel_events": e.get("channel_events", [])}
+            channels = ", ".join(str(ch) for ch in e.get("channels", [e["channel"]]))
+            events.append(f'<tr><td>{badge(e["severity"])}</td><td>{esc(e["event_type"])}</td>'
+                          f'<td>{tc_label(e["timecode"], e["timecode_day_offset"])}</td><td class="offset">{val(e["offset"])}</td><td>{esc(channels)}</td>'
+                          f'<td>{e["duration_seconds"]*1000:.3f}</td><td>{esc(e["detection_method"])}</td><td>{snippet}</td>'
+                          f'<td><details><summary>Exact samples / measurements</summary><pre>{esc(json.dumps(evidence, ensure_ascii=False, indent=2))}</pre></details></td></tr>')
+        event_table = ('<h3>Defect issues</h3><div class="scroll"><table><thead><tr>'
+                       '<th>Severity</th><th>Type</th><th>TC</th><th>Offset</th><th>Channels</th><th>Length (ms)</th><th>Method</th><th>Listen</th><th>Evidence</th>'
+                       '</tr></thead><tbody>' + "".join(events) + '</tbody></table></div>') if events else ""
+        technical = {k: v for k, v in a.items() if k not in ("checks", "defects")}
+        details.append(f'<article id="file-{index}"><h3>{index:03d} · {esc(a["filename"])} {badge(a["status"])}</h3>'
+                       f'<p class="path">{esc(a["path"])}</p>{origin_line}<ul class="checks">{checks}</ul>{event_table}'
+                       f'<details><summary>Technical metadata, measurements and hashes</summary><pre>{esc(json.dumps(technical, ensure_ascii=False, indent=2))}</pre></details></article>')
+    groups = "".join(f'<li>{badge(c["status"])} <b>{esc(c["code"])}</b> · {esc(c["message"])}'
+                     + (f'<details><summary>Affected files ({len(c["files"])})</summary><pre>{esc(chr(10).join(c["files"]))}</pre></details>' if c["files"] else "") + '</li>' for c in report["group_checks"])
+    html = f'''<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; media-src 'self' file:; base-uri 'none'; form-action 'none'">
+<title>Audio Delivery QC Inspector — {esc(report['scan_date'][:10])}</title>
+<style>
+:root{{color-scheme:light;--ink:#172c38;--muted:#576975;--line:#dce3e7}}
+*{{box-sizing:border-box}}body{{margin:0;background:#f3f5f6;color:var(--ink);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
+header{{background:#162d38;color:#fff;padding:38px 5vw 30px;border-bottom:4px solid #68b6b0}}
+header small{{letter-spacing:.16em;color:#b4d3d5}}h1{{font-size:28px;letter-spacing:.03em;margin:8px 0}}h2{{font-size:20px;margin-top:34px}}h3{{font-size:16px}}
+main{{padding:24px 5vw 60px;max-width:1800px;margin:auto}}.cards{{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}}
+.card{{padding:18px;background:#fff;border:1px solid var(--line);border-radius:7px}}.card strong{{display:block;font-size:30px}}.card span{{color:var(--muted);font-size:12px}}
+.notice{{padding:14px 18px;border-left:3px solid #68b6b0;background:#e6f0f1}}.scroll{{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:7px}}
+.tc,.offset{{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}}.tc{{font-size:16px;font-weight:700;white-space:nowrap;user-select:all}}.offset{{color:var(--muted)}}header .timing{{font-size:13px;line-height:2}}header .timing small{{letter-spacing:normal}}
+table{{border-collapse:collapse;width:100%;font-size:12px}}th,td{{padding:12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}}thead th{{background:#eaf0f3;color:#40545f}}tbody tr:hover{{background:#f4f8fa}}
+a{{color:#126a7c;text-decoration:none}}a:hover{{text-decoration:underline}}.badge{{display:inline-block;font-size:10px;letter-spacing:.05em;font-weight:700;padding:3px 7px;border-radius:4px}}
+.PASS{{background:#e1f2e9;color:#19633d}}.WARNING{{background:#fff0ce;color:#7e5100}}.FAIL{{background:#fce3e3;color:#a42b2b}}.INFO{{background:#e7edf3;color:#455b6a}}
+article{{margin:14px 0;padding:20px;background:#fff;border:1px solid var(--line);border-radius:7px;scroll-margin-top:15px}}
+.path{{font-size:12px;color:var(--muted);overflow-wrap:anywhere}}.checks{{padding-left:0;list-style:none}}li{{margin:8px 0}}.checks li{{padding:4px 0}}
+details{{margin-top:12px}}summary{{cursor:pointer;color:#126a7c}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;max-width:100%;background:#f2f5f7;padding:14px;border-radius:5px}}td pre{{min-width:230px;margin:0}}
+footer{{margin-top:32px;color:var(--muted);font-size:12px}}@media(max-width:800px){{.cards{{grid-template-columns:repeat(3,1fr)}}h1{{font-size:22px}}}}@media print{{header{{color:#172c38;background:#fff}}main{{padding:10px}}.scroll{{overflow:visible}}table{{font-size:8px}}th,td{{padding:4px;white-space:normal}}article{{break-inside:avoid}}}}
+</style></head><body><header><small>LOCAL TECHNICAL QUALITY CONTROL</small><h1>AUDIO DELIVERY QC INSPECTOR</h1>
+<p>{badge(report['status'])} &nbsp; {esc(report['configuration']['preset'])} · {esc(report['scan_date'])} · v{esc(report['tool_version'])}</p>{timing_header}</header>
+<main><div class="cards">{cards}</div><p class="path">Source: {esc(report['source'])} · Elapsed: {report['elapsed_seconds']:.1f} s</p>
+<h2>Especificación efectiva · {esc(report['configuration']['preset'])}</h2><div class="scroll"><table><tbody>{specification}</tbody></table></div>
+<p class="notice">{esc(report['defect_notice'])}</p>
+<p>Frame rate is a reporting setting. TC and File start TC are derived navigation labels, not timecode metadata embedded in the WAV. TC identifies the video frame containing the exact sample. Offset is file-relative (milliseconds). The authoritative sample index and full timestamp remain in Evidence and JSON. TC wraps at 24 hours; any extra days are shown separately.</p>
+<p>Defect issues group same-type channel events from one source within the configured start tolerance. Length, TC and method describe the earliest channel representative; Evidence retains every channel event and the full sample extent. One Evidence WAV preserves the original multichannel context.</p>
+<p>PASS: configured checks satisfied · WARNING: review required · FAIL: technical rule violated or unreadable media · INFO: observation. Status counts describe files; defect issues count report rows. Group warnings also affect the overall status. “—” means unavailable.</p>
+<h2>Delivery overview</h2><div class="scroll"><table><thead><tr><th>Status</th><th>File / details</th><th>Duration (s)</th><th>Rate (Hz)</th><th>Bits</th><th>Ch</th><th>Layout</th><th>Peak (dBFS)</th><th>TP (dBTP)</th><th>I (LUFS)</th><th>LRA (LU)</th><th>BEXT</th><th>TimeReference</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<h2>Group consistency</h2><ul class="checks">{groups or '<li>No group inconsistencies detected.</li>'}</ul>
+<h2>File checks and evidence</h2>{''.join(details) or '<p>No supported audio files found.</p>'}
+<h2>Configuration and provenance</h2><details><summary>Configuration used</summary><pre>{esc(json.dumps(report['configuration'], ensure_ascii=False, indent=2))}</pre></details>
+<details><summary>Measurement conventions and tools</summary><pre>{esc(json.dumps({'conventions': report['conventions'], 'dependencies': report['dependencies']}, indent=2))}</pre></details>
+<footer>Self-contained local report. Source media opened read-only. No telemetry, remote assets or server required. True Peak is reported at 0.1 dB resolution; verify values near a delivery limit with the required reference meter. LRA is report-only.</footer>
+</main></body></html>'''
+    with path.open("x", encoding="utf-8") as handle:
+        handle.write(html)

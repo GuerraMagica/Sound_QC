@@ -1,0 +1,5028 @@
+{
+  "FILM_48K": [
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/broken.wav",
+      "filename": "broken.wav",
+      "size_bytes": 13,
+      "duration_seconds": null,
+      "decoded_duration_seconds": null,
+      "sample_rate": null,
+      "codec": null,
+      "pcm_format": null,
+      "bit_depth": null,
+      "channels": null,
+      "channel_layout": null,
+      "stream_count": 0,
+      "metadata": {},
+      "bwf": {
+        "supported_container": false,
+        "present": null,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": []
+      },
+      "measurements": {},
+      "sha256": "44942d0aefbfdd862381d0c7e1098974697d50ac8f8b70b19f1b6ca9975db601",
+      "audio_sha256": null,
+      "checks": [
+        {
+          "code": "inspection",
+          "status": "FAIL",
+          "message": "<SOURCE>/broken.wav: Invalid data found when processing input",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "INFO",
+          "message": "Bit depth unavailable; preferred 24",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "BEXT inspection unavailable for this container",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "WARNING",
+          "message": "Integrated loudness unavailable (short, silent, below gate, or failed analysis)",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clean.wav",
+      "filename": "clean.wav",
+      "size_bytes": 576682,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": -19.99999792912278,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.99999792912278
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.004,
+        "max_short_term_lufs": -23.004,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "1b31cbbaadfe79584fb4a19cea24f39389c7bef2f1cb5ccedd9a296cff0186f6",
+      "audio_sha256": "3c0d471d15807b658d5e18137d2511511901d343358548c860d89a52a18938c7",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-23.010 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clicks.wav",
+      "filename": "clicks.wav",
+      "size_bytes": 432682,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -1.8732272847067915,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -1.8732272847067915
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -33.567,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -30.868,
+        "max_short_term_lufs": -33.636,
+        "true_peak_dbtp": -0.2,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "ebc7f9883f3bbd3432345d8528f4b59af5938c3ed713ee44ecf9437778e2d82c",
+      "audio_sha256": "e63a32fc3c001173125c51fe550881280f3ac1f3cae5b95d1296eded676ccbcb",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-33.567 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-0.2 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/clipped.wav",
+      "filename": "clipped.wav",
+      "size_bytes": 576044,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": 0.0,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          0.0
+        ],
+        "rail_samples_per_channel": [
+          88000
+        ],
+        "longest_rail_run_per_channel": [
+          11
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -1.83,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -1.824,
+        "max_short_term_lufs": -1.824,
+        "true_peak_dbtp": 0.1,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "9043766c4f4e0a512936a6e341cd96ffd2065fc2eb20929db223486cbbf5714c",
+      "audio_sha256": "9926cc030a4015284fc5d06accc74165b3bb0883ae6757b20f0ab30b37633122",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "FAIL",
+          "message": "Digital overload / full-scale plateau detected (criterion: 3 consecutive same-polarity rail samples); longest runs [11], >0 dBFS samples 0",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-1.830 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "0.1 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/silence.wav",
+      "filename": "silence.wav",
+      "size_bytes": 144044,
+      "duration_seconds": 1.0,
+      "decoded_duration_seconds": 1.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 144000,
+        "declared_sample_frames": 48000
+      },
+      "measurements": {
+        "decoded_sample_frames": 48000,
+        "sample_peak_dbfs": null,
+        "digital_silence": true,
+        "channel_sample_peak_dbfs": [
+          null
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": null,
+        "lra_lu": null,
+        "max_momentary_lufs": null,
+        "max_short_term_lufs": null,
+        "true_peak_dbtp": null,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "2c43af5358390950b8fd532fe24173800155df4553ad174ed3512c3cf002ab36",
+      "audio_sha256": "47d4d90b8810a52eb7dfa160f60df91c1ef0f62bb76a1795f52544e00773b8b6",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "silence",
+          "status": "INFO",
+          "message": "All decoded samples are digital zero; logarithmic levels unavailable",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "WARNING",
+          "message": "Integrated loudness unavailable (short, silent, below gate, or failed analysis)",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/zero_run.wav",
+      "filename": "zero_run.wav",
+      "size_bytes": 432044,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -27.958808456954568,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -27.958808456954568
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -32.586,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -31.871,
+        "max_short_term_lufs": -33.635,
+        "true_peak_dbtp": -28.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "437f06868782e61ee37b6a01d9d21b6cde66362a25d7b42683297d75dbc5679d",
+      "audio_sha256": "99410923e9bf61bc200b3b4ce4467445ac139c707c78aec273c897a6495c2d9d",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-32.586 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-28.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/nested/wrong_format.wav",
+      "filename": "wrong_format.wav",
+      "size_bytes": 352844,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "codec": "pcm_s16le",
+      "pcm_format": "s16",
+      "bit_depth": 16,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 2,
+        "container_bits": 16,
+        "data_bytes": 352800,
+        "declared_sample_frames": 176400
+      },
+      "measurements": {
+        "decoded_sample_frames": 176400,
+        "sample_peak_dbfs": -19.999469871546843,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.999469871546843
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.001,
+        "max_short_term_lufs": -23.001,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "c473040cf621d75063d4c7054a6908c900e61c7f6337d6b72f3247991fca9dae",
+      "audio_sha256": "23a31dafc54843e2b15072cdb9a8d02b2be560667269faace87bd13184fb7c0e",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "FAIL",
+          "message": "Sample rate 44100 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "WARNING",
+          "message": "Bit depth 16; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s16le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-23.010 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    }
+  ],
+  "BROADCAST_EBU_R128": [
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/broken.wav",
+      "filename": "broken.wav",
+      "size_bytes": 13,
+      "duration_seconds": null,
+      "decoded_duration_seconds": null,
+      "sample_rate": null,
+      "codec": null,
+      "pcm_format": null,
+      "bit_depth": null,
+      "channels": null,
+      "channel_layout": null,
+      "stream_count": 0,
+      "metadata": {},
+      "bwf": {
+        "supported_container": false,
+        "present": null,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": []
+      },
+      "measurements": {},
+      "sha256": "44942d0aefbfdd862381d0c7e1098974697d50ac8f8b70b19f1b6ca9975db601",
+      "audio_sha256": null,
+      "checks": [
+        {
+          "code": "inspection",
+          "status": "FAIL",
+          "message": "<SOURCE>/broken.wav: Invalid data found when processing input",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "INFO",
+          "message": "Bit depth unavailable; preferred 24",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "BEXT inspection unavailable for this container",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "WARNING",
+          "message": "Integrated loudness unavailable (short, silent, below gate, or failed analysis)",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clean.wav",
+      "filename": "clean.wav",
+      "size_bytes": 576682,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": -19.99999792912278,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.99999792912278
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.004,
+        "max_short_term_lufs": -23.004,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "1b31cbbaadfe79584fb4a19cea24f39389c7bef2f1cb5ccedd9a296cff0186f6",
+      "audio_sha256": "3c0d471d15807b658d5e18137d2511511901d343358548c860d89a52a18938c7",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "PASS",
+          "message": "-23.010 LUFS; target -23 \u00b10.5 LU",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "PASS",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution); maximum -1 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/clicks.wav",
+      "filename": "clicks.wav",
+      "size_bytes": 432682,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -1.8732272847067915,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -1.8732272847067915
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -33.567,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -30.868,
+        "max_short_term_lufs": -33.636,
+        "true_peak_dbtp": -0.2,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "ebc7f9883f3bbd3432345d8528f4b59af5938c3ed713ee44ecf9437778e2d82c",
+      "audio_sha256": "e63a32fc3c001173125c51fe550881280f3ac1f3cae5b95d1296eded676ccbcb",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "FAIL",
+          "message": "-33.567 LUFS; target -23 \u00b10.5 LU",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "FAIL",
+          "message": "-0.2 dBTP (0.1 dB reporting resolution); maximum -1 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/clipped.wav",
+      "filename": "clipped.wav",
+      "size_bytes": 576044,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": 0.0,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          0.0
+        ],
+        "rail_samples_per_channel": [
+          88000
+        ],
+        "longest_rail_run_per_channel": [
+          11
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -1.83,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -1.824,
+        "max_short_term_lufs": -1.824,
+        "true_peak_dbtp": 0.1,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "9043766c4f4e0a512936a6e341cd96ffd2065fc2eb20929db223486cbbf5714c",
+      "audio_sha256": "9926cc030a4015284fc5d06accc74165b3bb0883ae6757b20f0ab30b37633122",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "FAIL",
+          "message": "Digital overload / full-scale plateau detected (criterion: 3 consecutive same-polarity rail samples); longest runs [11], >0 dBFS samples 0",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "FAIL",
+          "message": "-1.830 LUFS; target -23 \u00b10.5 LU",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "FAIL",
+          "message": "0.1 dBTP (0.1 dB reporting resolution); maximum -1 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/silence.wav",
+      "filename": "silence.wav",
+      "size_bytes": 144044,
+      "duration_seconds": 1.0,
+      "decoded_duration_seconds": 1.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 144000,
+        "declared_sample_frames": 48000
+      },
+      "measurements": {
+        "decoded_sample_frames": 48000,
+        "sample_peak_dbfs": null,
+        "digital_silence": true,
+        "channel_sample_peak_dbfs": [
+          null
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": null,
+        "lra_lu": null,
+        "max_momentary_lufs": null,
+        "max_short_term_lufs": null,
+        "true_peak_dbtp": null,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "2c43af5358390950b8fd532fe24173800155df4553ad174ed3512c3cf002ab36",
+      "audio_sha256": "47d4d90b8810a52eb7dfa160f60df91c1ef0f62bb76a1795f52544e00773b8b6",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "silence",
+          "status": "INFO",
+          "message": "All decoded samples are digital zero; logarithmic levels unavailable",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "WARNING",
+          "message": "Integrated loudness unavailable (short, silent, below gate, or failed analysis)",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/zero_run.wav",
+      "filename": "zero_run.wav",
+      "size_bytes": 432044,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -27.958808456954568,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -27.958808456954568
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -32.586,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -31.871,
+        "max_short_term_lufs": -33.635,
+        "true_peak_dbtp": -28.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "437f06868782e61ee37b6a01d9d21b6cde66362a25d7b42683297d75dbc5679d",
+      "audio_sha256": "99410923e9bf61bc200b3b4ce4467445ac139c707c78aec273c897a6495c2d9d",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "FAIL",
+          "message": "-32.586 LUFS; target -23 \u00b10.5 LU",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "PASS",
+          "message": "-28.0 dBTP (0.1 dB reporting resolution); maximum -1 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/nested/wrong_format.wav",
+      "filename": "wrong_format.wav",
+      "size_bytes": 352844,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "codec": "pcm_s16le",
+      "pcm_format": "s16",
+      "bit_depth": 16,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 2,
+        "container_bits": 16,
+        "data_bytes": 352800,
+        "declared_sample_frames": 176400
+      },
+      "measurements": {
+        "decoded_sample_frames": 176400,
+        "sample_peak_dbfs": -19.999469871546843,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.999469871546843
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.001,
+        "max_short_term_lufs": -23.001,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "c473040cf621d75063d4c7054a6908c900e61c7f6337d6b72f3247991fca9dae",
+      "audio_sha256": "23a31dafc54843e2b15072cdb9a8d02b2be560667269faace87bd13184fb7c0e",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "FAIL",
+          "message": "Sample rate 44100 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "WARNING",
+          "message": "Bit depth 16; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s16le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "PASS",
+          "message": "-23.010 LUFS; target -23 \u00b10.5 LU",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "PASS",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution); maximum -1 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    }
+  ],
+  "CUSTOM": [
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/broken.wav",
+      "filename": "broken.wav",
+      "size_bytes": 13,
+      "duration_seconds": null,
+      "decoded_duration_seconds": null,
+      "sample_rate": null,
+      "codec": null,
+      "pcm_format": null,
+      "bit_depth": null,
+      "channels": null,
+      "channel_layout": null,
+      "stream_count": 0,
+      "metadata": {},
+      "bwf": {
+        "supported_container": false,
+        "present": null,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": []
+      },
+      "measurements": {},
+      "sha256": "44942d0aefbfdd862381d0c7e1098974697d50ac8f8b70b19f1b6ca9975db601",
+      "audio_sha256": null,
+      "checks": [
+        {
+          "code": "inspection",
+          "status": "FAIL",
+          "message": "<SOURCE>/broken.wav: Invalid data found when processing input",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "BEXT inspection unavailable for this container",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "WARNING",
+          "message": "Integrated loudness unavailable (short, silent, below gate, or failed analysis)",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clean.wav",
+      "filename": "clean.wav",
+      "size_bytes": 576682,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": -19.99999792912278,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.99999792912278
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.004,
+        "max_short_term_lufs": -23.004,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "1b31cbbaadfe79584fb4a19cea24f39389c7bef2f1cb5ccedd9a296cff0186f6",
+      "audio_sha256": "3c0d471d15807b658d5e18137d2511511901d343358548c860d89a52a18938c7",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-23.010 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clicks.wav",
+      "filename": "clicks.wav",
+      "size_bytes": 432682,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -1.8732272847067915,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -1.8732272847067915
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -33.567,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -30.868,
+        "max_short_term_lufs": -33.636,
+        "true_peak_dbtp": -0.2,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "ebc7f9883f3bbd3432345d8528f4b59af5938c3ed713ee44ecf9437778e2d82c",
+      "audio_sha256": "e63a32fc3c001173125c51fe550881280f3ac1f3cae5b95d1296eded676ccbcb",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-33.567 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-0.2 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/clipped.wav",
+      "filename": "clipped.wav",
+      "size_bytes": 576044,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": 0.0,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          0.0
+        ],
+        "rail_samples_per_channel": [
+          88000
+        ],
+        "longest_rail_run_per_channel": [
+          11
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -1.83,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -1.824,
+        "max_short_term_lufs": -1.824,
+        "true_peak_dbtp": 0.1,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "9043766c4f4e0a512936a6e341cd96ffd2065fc2eb20929db223486cbbf5714c",
+      "audio_sha256": "9926cc030a4015284fc5d06accc74165b3bb0883ae6757b20f0ab30b37633122",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "FAIL",
+          "message": "Digital overload / full-scale plateau detected (criterion: 3 consecutive same-polarity rail samples); longest runs [11], >0 dBFS samples 0",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-1.830 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "0.1 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/silence.wav",
+      "filename": "silence.wav",
+      "size_bytes": 144044,
+      "duration_seconds": 1.0,
+      "decoded_duration_seconds": 1.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 144000,
+        "declared_sample_frames": 48000
+      },
+      "measurements": {
+        "decoded_sample_frames": 48000,
+        "sample_peak_dbfs": null,
+        "digital_silence": true,
+        "channel_sample_peak_dbfs": [
+          null
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": null,
+        "lra_lu": null,
+        "max_momentary_lufs": null,
+        "max_short_term_lufs": null,
+        "true_peak_dbtp": null,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "2c43af5358390950b8fd532fe24173800155df4553ad174ed3512c3cf002ab36",
+      "audio_sha256": "47d4d90b8810a52eb7dfa160f60df91c1ef0f62bb76a1795f52544e00773b8b6",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "silence",
+          "status": "INFO",
+          "message": "All decoded samples are digital zero; logarithmic levels unavailable",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "WARNING",
+          "message": "Integrated loudness unavailable (short, silent, below gate, or failed analysis)",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/zero_run.wav",
+      "filename": "zero_run.wav",
+      "size_bytes": 432044,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -27.958808456954568,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -27.958808456954568
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -32.586,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -31.871,
+        "max_short_term_lufs": -33.635,
+        "true_peak_dbtp": -28.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "437f06868782e61ee37b6a01d9d21b6cde66362a25d7b42683297d75dbc5679d",
+      "audio_sha256": "99410923e9bf61bc200b3b4ce4467445ac139c707c78aec273c897a6495c2d9d",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-32.586 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-28.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/nested/wrong_format.wav",
+      "filename": "wrong_format.wav",
+      "size_bytes": 352844,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "codec": "pcm_s16le",
+      "pcm_format": "s16",
+      "bit_depth": 16,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 2,
+        "container_bits": 16,
+        "data_bytes": 352800,
+        "declared_sample_frames": 176400
+      },
+      "measurements": {
+        "decoded_sample_frames": 176400,
+        "sample_peak_dbfs": -19.999469871546843,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.999469871546843
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.001,
+        "max_short_term_lufs": -23.001,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "c473040cf621d75063d4c7054a6908c900e61c7f6337d6b72f3247991fca9dae",
+      "audio_sha256": "23a31dafc54843e2b15072cdb9a8d02b2be560667269faace87bd13184fb7c0e",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 44100 Hz",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-23.010 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        }
+      ],
+      "defects": []
+    }
+  ],
+  "defects_and_zero_rule": [
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/broken.wav",
+      "filename": "broken.wav",
+      "size_bytes": 13,
+      "duration_seconds": null,
+      "decoded_duration_seconds": null,
+      "sample_rate": null,
+      "codec": null,
+      "pcm_format": null,
+      "bit_depth": null,
+      "channels": null,
+      "channel_layout": null,
+      "stream_count": 0,
+      "metadata": {},
+      "bwf": {
+        "supported_container": false,
+        "present": null,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": []
+      },
+      "measurements": {},
+      "sha256": "44942d0aefbfdd862381d0c7e1098974697d50ac8f8b70b19f1b6ca9975db601",
+      "audio_sha256": null,
+      "checks": [
+        {
+          "code": "inspection",
+          "status": "FAIL",
+          "message": "<SOURCE>/broken.wav: Invalid data found when processing input",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "INFO",
+          "message": "Bit depth unavailable; preferred 24",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "BEXT inspection unavailable for this container",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "WARNING",
+          "message": "Integrated loudness unavailable (short, silent, below gate, or failed analysis)",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clean.wav",
+      "filename": "clean.wav",
+      "size_bytes": 576682,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": -19.99999792912278,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.99999792912278
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": [
+          1
+        ],
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.004,
+        "max_short_term_lufs": -23.004,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "1b31cbbaadfe79584fb4a19cea24f39389c7bef2f1cb5ccedd9a296cff0186f6",
+      "audio_sha256": "3c0d471d15807b658d5e18137d2511511901d343358548c860d89a52a18938c7",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-23.010 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        },
+        {
+          "code": "defect_candidates",
+          "status": "INFO",
+          "message": "No candidates retained by the configured detector; this is not an audible-quality guarantee",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/clicks.wav",
+      "filename": "clicks.wav",
+      "size_bytes": 432682,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -1.8732272847067915,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -1.8732272847067915
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": [
+          1
+        ],
+        "integrated_lufs": -33.567,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -30.868,
+        "max_short_term_lufs": -33.636,
+        "true_peak_dbtp": -0.2,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "ebc7f9883f3bbd3432345d8528f4b59af5938c3ed713ee44ecf9437778e2d82c",
+      "audio_sha256": "e63a32fc3c001173125c51fe550881280f3ac1f3cae5b95d1296eded676ccbcb",
+      "checks": [
+        {
+          "code": "defects_capped",
+          "status": "WARNING",
+          "message": "Consolidated defect candidate limit (1) exceeded; additional issues were not retained and further candidate analysis stopped",
+          "files": []
+        },
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-33.567 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-0.2 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        },
+        {
+          "code": "defect_candidates",
+          "status": "WARNING",
+          "message": "1 possible defects require human review",
+          "files": []
+        }
+      ],
+      "defects": [
+        {
+          "timestamp_seconds": 1.0,
+          "sample_index": 48000,
+          "channel": 1,
+          "event_type": "POSSIBLE CLICK / TICK",
+          "duration_seconds": 0.00016666666666666666,
+          "severity": "WARNING",
+          "measurements": {
+            "local_rms_dbfs": -29.755261939180183,
+            "impulse_deviation_db": 27.883727661869237,
+            "comparison_rms_floor_dbfs": -140.0,
+            "entry_derivative": 0.8008637428283691,
+            "exit_derivative": -0.7991561889648438,
+            "duration_samples": 8
+          },
+          "detection_method": "local_derivative_MAD+opposite_edges+isolated_impulse_vs_RMS",
+          "snippet": null,
+          "timecode": null,
+          "timecode_frame_rate": null,
+          "timecode_basis": null,
+          "file_start_timecode": null,
+          "timecode_day_offset": null,
+          "offset": null,
+          "merged_candidate_count": 2,
+          "cluster_first_sample": 47996,
+          "cluster_last_sample": 48007
+        }
+      ]
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/clipped.wav",
+      "filename": "clipped.wav",
+      "size_bytes": 576044,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": 0.0,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          0.0
+        ],
+        "rail_samples_per_channel": [
+          88000
+        ],
+        "longest_rail_run_per_channel": [
+          11
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": [
+          1
+        ],
+        "integrated_lufs": -1.83,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -1.824,
+        "max_short_term_lufs": -1.824,
+        "true_peak_dbtp": 0.1,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "9043766c4f4e0a512936a6e341cd96ffd2065fc2eb20929db223486cbbf5714c",
+      "audio_sha256": "9926cc030a4015284fc5d06accc74165b3bb0883ae6757b20f0ab30b37633122",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "FAIL",
+          "message": "Digital overload / full-scale plateau detected (criterion: 3 consecutive same-polarity rail samples); longest runs [11], >0 dBFS samples 0",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-1.830 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "0.1 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        },
+        {
+          "code": "defect_candidates",
+          "status": "INFO",
+          "message": "No candidates retained by the configured detector; this is not an audible-quality guarantee",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/silence.wav",
+      "filename": "silence.wav",
+      "size_bytes": 144044,
+      "duration_seconds": 1.0,
+      "decoded_duration_seconds": 1.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 144000,
+        "declared_sample_frames": 48000
+      },
+      "measurements": {
+        "decoded_sample_frames": 48000,
+        "sample_peak_dbfs": null,
+        "digital_silence": true,
+        "channel_sample_peak_dbfs": [
+          null
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": [
+          48000
+        ],
+        "integrated_lufs": null,
+        "lra_lu": null,
+        "max_momentary_lufs": null,
+        "max_short_term_lufs": null,
+        "true_peak_dbtp": null,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "2c43af5358390950b8fd532fe24173800155df4553ad174ed3512c3cf002ab36",
+      "audio_sha256": "47d4d90b8810a52eb7dfa160f60df91c1ef0f62bb76a1795f52544e00773b8b6",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "silence",
+          "status": "INFO",
+          "message": "All decoded samples are digital zero; logarithmic levels unavailable",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "WARNING",
+          "message": "Integrated loudness unavailable (short, silent, below gate, or failed analysis)",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        },
+        {
+          "code": "defect_candidates",
+          "status": "INFO",
+          "message": "No candidates retained by the configured detector; this is not an audible-quality guarantee",
+          "files": []
+        },
+        {
+          "code": "explicit_zero_run_rule",
+          "status": "FAIL",
+          "message": "Channel 1: confirmed 48000 zero samples exceed configured 800 ms failure rule",
+          "files": []
+        }
+      ],
+      "defects": [
+        {
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "channel": 1,
+          "event_type": "DIGITAL ZERO RUN (EXPLICIT RULE)",
+          "duration_seconds": 1.0,
+          "severity": "FAIL",
+          "measurements": {
+            "zero_samples": 48000,
+            "configured_failure_ms": 800
+          },
+          "detection_method": "exact_zero_samples+explicit_failure_rule",
+          "snippet": null,
+          "timecode": null,
+          "timecode_frame_rate": null,
+          "timecode_basis": null,
+          "file_start_timecode": null,
+          "timecode_day_offset": null,
+          "offset": null,
+          "merged_candidate_count": 1,
+          "cluster_first_sample": null,
+          "cluster_last_sample": null
+        }
+      ]
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/zero_run.wav",
+      "filename": "zero_run.wav",
+      "size_bytes": 432044,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -27.958808456954568,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -27.958808456954568
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": [
+          48001
+        ],
+        "integrated_lufs": -32.586,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -31.871,
+        "max_short_term_lufs": -33.635,
+        "true_peak_dbtp": -28.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "437f06868782e61ee37b6a01d9d21b6cde66362a25d7b42683297d75dbc5679d",
+      "audio_sha256": "99410923e9bf61bc200b3b4ce4467445ac139c707c78aec273c897a6495c2d9d",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-32.586 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-28.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        },
+        {
+          "code": "defect_candidates",
+          "status": "INFO",
+          "message": "No candidates retained by the configured detector; this is not an audible-quality guarantee",
+          "files": []
+        },
+        {
+          "code": "explicit_zero_run_rule",
+          "status": "FAIL",
+          "message": "Channel 1: confirmed 48001 zero samples exceed configured 800 ms failure rule",
+          "files": []
+        }
+      ],
+      "defects": [
+        {
+          "timestamp_seconds": 1.0,
+          "sample_index": 48000,
+          "channel": 1,
+          "event_type": "DIGITAL ZERO RUN (EXPLICIT RULE)",
+          "duration_seconds": 1.0000208333333334,
+          "severity": "FAIL",
+          "measurements": {
+            "zero_samples": 48001,
+            "configured_failure_ms": 800
+          },
+          "detection_method": "exact_zero_samples+explicit_failure_rule",
+          "snippet": null,
+          "timecode": null,
+          "timecode_frame_rate": null,
+          "timecode_basis": null,
+          "file_start_timecode": null,
+          "timecode_day_offset": null,
+          "offset": null,
+          "merged_candidate_count": 1,
+          "cluster_first_sample": null,
+          "cluster_last_sample": null
+        }
+      ]
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/nested/wrong_format.wav",
+      "filename": "wrong_format.wav",
+      "size_bytes": 352844,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "codec": "pcm_s16le",
+      "pcm_format": "s16",
+      "bit_depth": 16,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 2,
+        "container_bits": 16,
+        "data_bytes": 352800,
+        "declared_sample_frames": 176400
+      },
+      "measurements": {
+        "decoded_sample_frames": 176400,
+        "sample_peak_dbfs": -19.999469871546843,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.999469871546843
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": [
+          1
+        ],
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.001,
+        "max_short_term_lufs": -23.001,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "c473040cf621d75063d4c7054a6908c900e61c7f6337d6b72f3247991fca9dae",
+      "audio_sha256": "23a31dafc54843e2b15072cdb9a8d02b2be560667269faace87bd13184fb7c0e",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "FAIL",
+          "message": "Sample rate 44100 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "WARNING",
+          "message": "Bit depth 16; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s16le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "-23.010 LUFS; no loudness target configured",
+          "files": []
+        },
+        {
+          "code": "lra",
+          "status": "INFO",
+          "message": "LRA is report-only; unavailable below 3 s / below gate and unstable for short programmes",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "INFO",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution)",
+          "files": []
+        },
+        {
+          "code": "defect_candidates",
+          "status": "INFO",
+          "message": "No candidates retained by the configured detector; this is not an audible-quality guarantee",
+          "files": []
+        }
+      ],
+      "defects": []
+    }
+  ],
+  "true_peak_only": [
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/broken.wav",
+      "filename": "broken.wav",
+      "size_bytes": 13,
+      "duration_seconds": null,
+      "decoded_duration_seconds": null,
+      "sample_rate": null,
+      "codec": null,
+      "pcm_format": null,
+      "bit_depth": null,
+      "channels": null,
+      "channel_layout": null,
+      "stream_count": 0,
+      "metadata": {},
+      "bwf": {
+        "supported_container": false,
+        "present": null,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": []
+      },
+      "measurements": {},
+      "sha256": "44942d0aefbfdd862381d0c7e1098974697d50ac8f8b70b19f1b6ca9975db601",
+      "audio_sha256": null,
+      "checks": [
+        {
+          "code": "inspection",
+          "status": "FAIL",
+          "message": "<SOURCE>/broken.wav: Invalid data found when processing input",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "INFO",
+          "message": "Bit depth unavailable; preferred 24",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "BEXT inspection unavailable for this container",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clean.wav",
+      "filename": "clean.wav",
+      "size_bytes": 576682,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": -19.99999792912278,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.99999792912278
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.004,
+        "max_short_term_lufs": -23.004,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "1b31cbbaadfe79584fb4a19cea24f39389c7bef2f1cb5ccedd9a296cff0186f6",
+      "audio_sha256": "3c0d471d15807b658d5e18137d2511511901d343358548c860d89a52a18938c7",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "PASS",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution); maximum -6 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/clicks.wav",
+      "filename": "clicks.wav",
+      "size_bytes": 432682,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -1.8732272847067915,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -1.8732272847067915
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -33.567,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -30.868,
+        "max_short_term_lufs": -33.636,
+        "true_peak_dbtp": -0.2,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "ebc7f9883f3bbd3432345d8528f4b59af5938c3ed713ee44ecf9437778e2d82c",
+      "audio_sha256": "e63a32fc3c001173125c51fe550881280f3ac1f3cae5b95d1296eded676ccbcb",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "FAIL",
+          "message": "-0.2 dBTP (0.1 dB reporting resolution); maximum -6 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/clipped.wav",
+      "filename": "clipped.wav",
+      "size_bytes": 576044,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": 0.0,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          0.0
+        ],
+        "rail_samples_per_channel": [
+          88000
+        ],
+        "longest_rail_run_per_channel": [
+          11
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -1.83,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -1.824,
+        "max_short_term_lufs": -1.824,
+        "true_peak_dbtp": 0.1,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "9043766c4f4e0a512936a6e341cd96ffd2065fc2eb20929db223486cbbf5714c",
+      "audio_sha256": "9926cc030a4015284fc5d06accc74165b3bb0883ae6757b20f0ab30b37633122",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "FAIL",
+          "message": "Digital overload / full-scale plateau detected (criterion: 3 consecutive same-polarity rail samples); longest runs [11], >0 dBFS samples 0",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "FAIL",
+          "message": "0.1 dBTP (0.1 dB reporting resolution); maximum -6 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/silence.wav",
+      "filename": "silence.wav",
+      "size_bytes": 144044,
+      "duration_seconds": 1.0,
+      "decoded_duration_seconds": 1.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 144000,
+        "declared_sample_frames": 48000
+      },
+      "measurements": {
+        "decoded_sample_frames": 48000,
+        "sample_peak_dbfs": null,
+        "digital_silence": true,
+        "channel_sample_peak_dbfs": [
+          null
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": null,
+        "lra_lu": null,
+        "max_momentary_lufs": null,
+        "max_short_term_lufs": null,
+        "true_peak_dbtp": null,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "2c43af5358390950b8fd532fe24173800155df4553ad174ed3512c3cf002ab36",
+      "audio_sha256": "47d4d90b8810a52eb7dfa160f60df91c1ef0f62bb76a1795f52544e00773b8b6",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "silence",
+          "status": "INFO",
+          "message": "All decoded samples are digital zero; logarithmic levels unavailable",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "WARNING",
+          "message": "True Peak unavailable; no numeric value or failure inferred",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/zero_run.wav",
+      "filename": "zero_run.wav",
+      "size_bytes": 432044,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -27.958808456954568,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -27.958808456954568
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -32.586,
+        "lra_lu": 20.0,
+        "max_momentary_lufs": -31.871,
+        "max_short_term_lufs": -33.635,
+        "true_peak_dbtp": -28.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "437f06868782e61ee37b6a01d9d21b6cde66362a25d7b42683297d75dbc5679d",
+      "audio_sha256": "99410923e9bf61bc200b3b4ce4467445ac139c707c78aec273c897a6495c2d9d",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "PASS",
+          "message": "-28.0 dBTP (0.1 dB reporting resolution); maximum -6 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/nested/wrong_format.wav",
+      "filename": "wrong_format.wav",
+      "size_bytes": 352844,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "codec": "pcm_s16le",
+      "pcm_format": "s16",
+      "bit_depth": 16,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 2,
+        "container_bits": 16,
+        "data_bytes": 352800,
+        "declared_sample_frames": 176400
+      },
+      "measurements": {
+        "decoded_sample_frames": 176400,
+        "sample_peak_dbfs": -19.999469871546843,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.999469871546843
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null,
+        "integrated_lufs": -23.01,
+        "lra_lu": 0.0,
+        "max_momentary_lufs": -23.001,
+        "max_short_term_lufs": -23.001,
+        "true_peak_dbtp": -20.0,
+        "true_peak_resolution_db": 0.1,
+        "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates"
+      },
+      "sha256": "c473040cf621d75063d4c7054a6908c900e61c7f6337d6b72f3247991fca9dae",
+      "audio_sha256": "23a31dafc54843e2b15072cdb9a8d02b2be560667269faace87bd13184fb7c0e",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "FAIL",
+          "message": "Sample rate 44100 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "WARNING",
+          "message": "Bit depth 16; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s16le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        },
+        {
+          "code": "true_peak",
+          "status": "PASS",
+          "message": "-20.0 dBTP (0.1 dB reporting resolution); maximum -6 dBTP",
+          "files": []
+        }
+      ],
+      "defects": []
+    }
+  ],
+  "levels_disabled": [
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/broken.wav",
+      "filename": "broken.wav",
+      "size_bytes": 13,
+      "duration_seconds": null,
+      "decoded_duration_seconds": null,
+      "sample_rate": null,
+      "codec": null,
+      "pcm_format": null,
+      "bit_depth": null,
+      "channels": null,
+      "channel_layout": null,
+      "stream_count": 0,
+      "metadata": {},
+      "bwf": {
+        "supported_container": false,
+        "present": null,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": []
+      },
+      "measurements": {},
+      "sha256": "44942d0aefbfdd862381d0c7e1098974697d50ac8f8b70b19f1b6ca9975db601",
+      "audio_sha256": null,
+      "checks": [
+        {
+          "code": "inspection",
+          "status": "FAIL",
+          "message": "<SOURCE>/broken.wav: Invalid data found when processing input",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "INFO",
+          "message": "Bit depth unavailable; preferred 24",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "INFO",
+          "message": "BEXT inspection unavailable for this container",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clean.wav",
+      "filename": "clean.wav",
+      "size_bytes": 576682,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": -19.99999792912278,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.99999792912278
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null
+      },
+      "sha256": "1b31cbbaadfe79584fb4a19cea24f39389c7bef2f1cb5ccedd9a296cff0186f6",
+      "audio_sha256": "3c0d471d15807b658d5e18137d2511511901d343358548c860d89a52a18938c7",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "PASS",
+      "path": "<SOURCE>/clicks.wav",
+      "filename": "clicks.wav",
+      "size_bytes": 432682,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {
+          "comment": "Synthetic QC fixture",
+          "encoded_by": "Audio QC",
+          "originator_reference": "TEST-01",
+          "date": "2026-10-07",
+          "creation_time": "12:34:56",
+          "time_reference": "172800000",
+          "coding_history": "A=PCM,F=48000,W=24,M=mono\r\n"
+        },
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": true,
+        "time_reference": 172800000,
+        "originator": "Audio QC",
+        "origination_date": "2026-10-07",
+        "origination_time": "12:34:56",
+        "coding_history": "A=PCM,F=48000,W=24,M=mono",
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "description": "Synthetic QC fixture",
+        "originator_reference": "TEST-01",
+        "version": 1,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -1.8732272847067915,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -1.8732272847067915
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null
+      },
+      "sha256": "ebc7f9883f3bbd3432345d8528f4b59af5938c3ed713ee44ecf9437778e2d82c",
+      "audio_sha256": "e63a32fc3c001173125c51fe550881280f3ac1f3cae5b95d1296eded676ccbcb",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "PASS",
+          "message": "BEXT chunk present; this does not certify all BWF metadata fields",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/clipped.wav",
+      "filename": "clipped.wav",
+      "size_bytes": 576044,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 576000,
+        "declared_sample_frames": 192000
+      },
+      "measurements": {
+        "decoded_sample_frames": 192000,
+        "sample_peak_dbfs": 0.0,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          0.0
+        ],
+        "rail_samples_per_channel": [
+          88000
+        ],
+        "longest_rail_run_per_channel": [
+          11
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null
+      },
+      "sha256": "9043766c4f4e0a512936a6e341cd96ffd2065fc2eb20929db223486cbbf5714c",
+      "audio_sha256": "9926cc030a4015284fc5d06accc74165b3bb0883ae6757b20f0ab30b37633122",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "FAIL",
+          "message": "Digital overload / full-scale plateau detected (criterion: 3 consecutive same-polarity rail samples); longest runs [11], >0 dBFS samples 0",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/silence.wav",
+      "filename": "silence.wav",
+      "size_bytes": 144044,
+      "duration_seconds": 1.0,
+      "decoded_duration_seconds": 1.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 144000,
+        "declared_sample_frames": 48000
+      },
+      "measurements": {
+        "decoded_sample_frames": 48000,
+        "sample_peak_dbfs": null,
+        "digital_silence": true,
+        "channel_sample_peak_dbfs": [
+          null
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null
+      },
+      "sha256": "2c43af5358390950b8fd532fe24173800155df4553ad174ed3512c3cf002ab36",
+      "audio_sha256": "47d4d90b8810a52eb7dfa160f60df91c1ef0f62bb76a1795f52544e00773b8b6",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "silence",
+          "status": "INFO",
+          "message": "All decoded samples are digital zero; logarithmic levels unavailable",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "WARNING",
+      "path": "<SOURCE>/zero_run.wav",
+      "filename": "zero_run.wav",
+      "size_bytes": 432044,
+      "duration_seconds": 3.0,
+      "decoded_duration_seconds": 3.0,
+      "sample_rate": 48000,
+      "codec": "pcm_s24le",
+      "pcm_format": "s32",
+      "bit_depth": 24,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 3,
+        "container_bits": 24,
+        "data_bytes": 432000,
+        "declared_sample_frames": 144000
+      },
+      "measurements": {
+        "decoded_sample_frames": 144000,
+        "sample_peak_dbfs": -27.958808456954568,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -27.958808456954568
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null
+      },
+      "sha256": "437f06868782e61ee37b6a01d9d21b6cde66362a25d7b42683297d75dbc5679d",
+      "audio_sha256": "99410923e9bf61bc200b3b4ce4467445ac139c707c78aec273c897a6495c2d9d",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "PASS",
+          "message": "Sample rate 48000 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "PASS",
+          "message": "Bit depth 24; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s24le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        }
+      ],
+      "defects": []
+    },
+    {
+      "status": "FAIL",
+      "path": "<SOURCE>/nested/wrong_format.wav",
+      "filename": "wrong_format.wav",
+      "size_bytes": 352844,
+      "duration_seconds": 4.0,
+      "decoded_duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "codec": "pcm_s16le",
+      "pcm_format": "s16",
+      "bit_depth": 16,
+      "channels": 1,
+      "channel_layout": null,
+      "stream_count": 1,
+      "metadata": {
+        "container": "wav",
+        "format_tags": {},
+        "stream_tags": {}
+      },
+      "bwf": {
+        "supported_container": true,
+        "present": false,
+        "time_reference": null,
+        "originator": null,
+        "origination_date": null,
+        "origination_time": null,
+        "coding_history": null,
+        "warnings": [],
+        "errors": [],
+        "container": "RIFF",
+        "format_tag": 1,
+        "block_align": 2,
+        "container_bits": 16,
+        "data_bytes": 352800,
+        "declared_sample_frames": 176400
+      },
+      "measurements": {
+        "decoded_sample_frames": 176400,
+        "sample_peak_dbfs": -19.999469871546843,
+        "digital_silence": false,
+        "channel_sample_peak_dbfs": [
+          -19.999469871546843
+        ],
+        "rail_samples_per_channel": [
+          0
+        ],
+        "longest_rail_run_per_channel": [
+          0
+        ],
+        "overload_samples": 0,
+        "nonfinite_samples": 0,
+        "longest_zero_run_per_channel": null
+      },
+      "sha256": "c473040cf621d75063d4c7054a6908c900e61c7f6337d6b72f3247991fca9dae",
+      "audio_sha256": "23a31dafc54843e2b15072cdb9a8d02b2be560667269faace87bd13184fb7c0e",
+      "checks": [
+        {
+          "code": "readability",
+          "status": "PASS",
+          "message": "Complete audio stream decoded successfully",
+          "files": []
+        },
+        {
+          "code": "sample_rate",
+          "status": "FAIL",
+          "message": "Sample rate 44100 Hz; required 48000 Hz",
+          "files": []
+        },
+        {
+          "code": "bit_depth_preferred",
+          "status": "WARNING",
+          "message": "Bit depth 16; preferred 24",
+          "files": []
+        },
+        {
+          "code": "pcm",
+          "status": "PASS",
+          "message": "Codec: pcm_s16le; PCM preferred",
+          "files": []
+        },
+        {
+          "code": "channel_layout",
+          "status": "INFO",
+          "message": "Channel assignment is absent in metadata; conventional mono/stereo used for loudness",
+          "files": []
+        },
+        {
+          "code": "bwf",
+          "status": "WARNING",
+          "message": "No BEXT chunk present",
+          "files": []
+        },
+        {
+          "code": "clipping",
+          "status": "PASS",
+          "message": "No digital overload or full-scale plateau detected",
+          "files": []
+        },
+        {
+          "code": "integrated_loudness",
+          "status": "INFO",
+          "message": "Loudness checks disabled by configuration",
+          "files": []
+        }
+      ],
+      "defects": []
+    }
+  ]
+}
