@@ -39,6 +39,8 @@ class RunLog:
         self.logger.propagate = False
         self.files = []
         self.notified = set()
+        self.error_handler = None
+        self.stderr = sys.stderr
         for stream, level, predicate in (
             (sys.stdout, logging.DEBUG if verbose else logging.INFO, lambda r: r.levelno < logging.WARNING),
             (sys.stderr, logging.WARNING, lambda r: r.levelno >= logging.WARNING),
@@ -52,6 +54,9 @@ class RunLog:
     def attach(self, output):
         for name, level in (("scan.log", logging.DEBUG), ("error.log", logging.ERROR)):
             handler = SafeFileHandler(output / name)
+            handler.set_name(name)
+            if name == "error.log":
+                self.error_handler = handler
             handler.setLevel(level)
             handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
             self.logger.addHandler(handler)
@@ -65,17 +70,24 @@ class RunLog:
                 errors.append(message)
                 if handler.baseFilename not in self.notified:
                     self.notified.add(handler.baseFilename)
-                    self.logger.warning(message)
+                    self.console_warning(message)
         return errors
 
+    def console_warning(self, message):
+        # No file logging here: diagnostic failures must not cause more writes.
+        try:
+            print(message, file=self.stderr)
+        except (OSError, ValueError):
+            pass
+
     def error_saved(self):
-        return any(h.baseFilename.endswith("/error.log") and h.stream is not None
-                   and h.failure is None for h in self.files)
+        handler = self.error_handler
+        return bool(handler is not None and handler.stream is not None and handler.failure is None)
 
     def close(self):
         for handler in list(self.logger.handlers):
+            self.logger.removeHandler(handler)
             try:
                 handler.close()
             except OSError as exc:
-                self.logger.warning("Cannot close diagnostic log: %s", exc)
-            self.logger.removeHandler(handler)
+                self.console_warning(f"Cannot close diagnostic log: {exc}")

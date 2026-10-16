@@ -60,7 +60,7 @@ def test_one_51_snippet_preserves_all_original_channels_order_gain_and_full_issu
     assert (first,end) == (47996-round(context*48000),48008+round(context*48000))
     write_reports(build_report(source,[audio],[],config,{},0),output)
     report = json.loads((output/'QC_REPORT.json').read_text())
-    assert report['schema_version'] == 3 and report['summary']['defect_issues'] == 1
+    assert report['schema_version'] == 4 and report['summary']['defect_issues'] == 1
     saved, = report['files'][0]['defects']
     assert saved['channels'] == [1,2,5]
     assert saved['cluster_first_sample'] == 47996 and saved['cluster_last_sample'] == 48007

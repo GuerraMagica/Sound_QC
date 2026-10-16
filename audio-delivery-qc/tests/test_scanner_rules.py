@@ -73,7 +73,9 @@ def test_float_overload_and_nan(tmp_path, config):
     assert a.status == Status.FAIL
     x[1000] = np.nan
     b = inspect_file(write_wav(tmp_path/"nan.wav", x, float_pcm=True), config)
-    assert b.status == Status.FAIL
+    assert b.status == Status.INCOMPLETE
+    assert any(c.code == "nonfinite_samples" and c.status == Status.FAIL for c in b.checks)
+    assert b.execution_status == "PARTIAL"
 
 
 @pytest.mark.integration
@@ -98,10 +100,12 @@ def test_broadcast_and_no_film_target(wav):
 def test_corrupt_and_truncated(tmp_path, config):
     bad = tmp_path/"bad.wav"
     bad.write_bytes(b"broken audio")
-    assert inspect_file(bad, config).status == Status.FAIL
+    assert inspect_file(bad, config).status == Status.INCOMPLETE
     p = write_wav(tmp_path/"truncated.wav", sine())
     p.write_bytes(p.read_bytes()[:-6])
-    assert inspect_file(p, config).status == Status.FAIL
+    result = inspect_file(p, config)
+    assert result.status == Status.INCOMPLETE
+    assert any(c.code == "container_integrity" and c.status == Status.FAIL for c in result.checks)
 
 
 @pytest.mark.integration

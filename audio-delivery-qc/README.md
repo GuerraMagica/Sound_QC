@@ -63,7 +63,7 @@ Quote paths containing spaces. `--export-defect-snippets` enables detection too.
 
 A timestamped report folder is created **beside** the source by default. Report dates and folder timestamps are explicitly UTC. A custom `--output` must be a **new** directory outside the scanned source folder. Existing reports are never overwritten. Nested symbolic links are skipped and reported to avoid traversal cycles; use actual source locations.
 
-Exit codes: **0** completed with PASS/WARNING/INFO; **1** completed with FAIL; **2** configuration/dependency/input/report-writing error; **130** cancelled. An empty folder still produces the report set with WARNING and a header-only defect CSV. One corrupt file cannot abort the delivery. Ctrl-C terminates the current decoder; partial evidence may remain in the new report folder.
+Exit codes: **0** completed with PASS/WARNING/INFO (optional diagnostic-log warnings do not fail the run); **1** completed with acoustic/technical QC FAIL; **2** operational failure or incomplete requested analysis/evidence/report delivery; **130** cancelled. Operational failure takes precedence over a simultaneous acoustic FAIL, whose checks are preserved. An empty folder still produces the report set with WARNING and a header-only defect CSV. One corrupt file cannot abort the delivery. Ctrl-C terminates the current decoder; partial evidence may remain in the new report folder.
 
 ## Operational diagnostics
 
@@ -109,7 +109,7 @@ The exact saved file also works with the CLI:
 audio-qc inspect "/path/to/audio.wav" --config "/path/to/Especificación CUSTOM.yaml"
 ```
 
-GUI, YAML and CLI all use the same configuration resolver and QC policy evaluator. Run captures a private validated configuration snapshot; later edits to the original YAML cannot affect that scan. The controls and Run button are disabled until completion. JSON retains the resolved configuration in schema version **3**, and HTML displays an **Especificación efectiva** table. Defect and timecode settings remain outside the delivery editor and are retained in saved YAML. Hashing and evidence-export checkboxes remain execution options; use `--hash` and `--export-defect-snippets` for equivalent CLI runs.
+GUI, YAML and CLI all use the same configuration resolver and QC policy evaluator. Run captures a private validated configuration snapshot; later edits to the original YAML cannot affect that scan. The controls and Run button are disabled until completion. JSON retains the resolved configuration in schema version **4**, and HTML displays an **Especificación efectiva** table. Defect and timecode settings remain outside the delivery editor and are retained in saved YAML. Hashing and evidence-export checkboxes remain execution options; use `--hash` and `--export-defect-snippets` for equivalent CLI runs.
 
 True Peak is an upper limit: a maximum of −6 dBTP accepts −8 and −6, and rejects −5. Loudness −14 LUFS ±1 accepts −15 through −13 under the existing numeric tolerance. Disabling Loudness with no True Peak maximum retains the existing behavior of not scheduling that FFmpeg measurement; unavailable values remain unavailable. Clipping uses the existing criterion, and allowed channel counts refer to one physical file.
 
@@ -136,7 +136,7 @@ The **Frame Rate** selector sits beside the QC preset in the GUI. It changes rep
 
 For BWF, the conversion is `floor((TimeReference + sample_index) × fps_numerator / (sample_rate × fps_denominator))`. The sum happens **before** conversion, so subframe BWF origins are preserved. Manual TC is parsed into an exact frame count and offsets are added from audio samples. Each displayed TC identifies the video frame containing that exact sample; nothing is snapped, quantized or moved in the source or detector.
 
-The defect table makes monospaced **TC** the primary location and shows **Offset** as `HH:MM:SS.mmm` from file start, truncated to the containing millisecond. Full `sample_index` and `timestamp_seconds` remain unchanged in JSON and under Evidence. New JSON fields include `timecode`, `timecode_frame_rate`, `timecode_basis`, `file_start_timecode`, `timecode_day_offset` and `offset`. Each file also has `timecode_reporting` with the exact rate, effective source, fallback reason and start TC. These fields were added in schema version 2 and remain in the current schema version 3 with issue consolidation; original fields are retained.
+The defect table makes monospaced **TC** the primary location and shows **Offset** as `HH:MM:SS.mmm` from file start, truncated to the containing millisecond. Full `sample_index` and `timestamp_seconds` remain unchanged in JSON and under Evidence. New JSON fields include `timecode`, `timecode_frame_rate`, `timecode_basis`, `file_start_timecode`, `timecode_day_offset` and `offset`. Each file also has `timecode_reporting` with the exact rate, effective source, fallback reason and start TC. These fields were added in schema version 2 and remain in the current schema version 4 with issue consolidation and execution diagnostics; original fields are retained.
 
 The header states frame rate, TC source and file start TC. It explicitly identifies frame rate as a reporting setting and the TC labels as derived navigation data, rather than metadata embedded in the WAV. For a mixed folder it directs the operator to each file's start/source rather than assigning one shared origin. The existing file-level CSV keeps all columns and one row per file. Conventional TC wraps at 24 hours; separate day offsets avoid losing the elapsed day count. File-relative offsets can exceed 24 hours.
 
@@ -223,11 +223,11 @@ Re-evaluation can use only facts actually collected. Numeric measurements omitte
 
 ## Report interpretation
 
-**PASS:** evaluated configured checks passed. **WARNING:** review needed or requested measurement unavailable. **FAIL:** a technical rule was violated, samples were invalid, or reading failed. **INFO:** observation without a pass/fail requirement. Overall precedence is FAIL, WARNING, PASS, INFO. Group warnings can raise overall status without changing file counts/statuses.
+**PASS:** evaluated configured checks passed. **WARNING:** review needed or a metric is legitimately unavailable. **FAIL:** a configured acoustic/technical rule was violated or invalid samples were measured. **INCOMPLETE:** requested analysis could not finish; genuine FAIL findings remain in the checks. **INFO:** observation without a pass/fail requirement. Overall precedence is INCOMPLETE, FAIL, WARNING, PASS, INFO. Group warnings can raise overall status without changing file counts/statuses.
 
 The self-contained HTML needs no server or external assets. Click filenames for all checks and expand technical details for metadata, loudness maxima and hashes. Each defect issue shows TC, offset, affected channels, representative duration/method, and expandable per-channel evidence. CSV is UTF-8 with BOM; possible spreadsheet formulas in text fields are escaped. JSON contains complete data. Unavailable metrics are **null** in JSON, blank in CSV, and **—** in HTML, never fabricated zeros. Digital silence has a separate flag.
 
-JSON schema **3** retains the `defects` list and its scalar fields, now representing operator-facing issues. Detector issues add `channels` and `channel_events`; each nested event retains its original sample/timestamp/measurements, raw count, sample bounds and report-only TC. `summary.defect_issues` is the row count; `defect_candidates` remains a legacy alias for that count. `QC_DEFECTS.csv` has one row per issue and appends Channels, Channel Events, Merged Candidate Count and sample bounds; the existing scalar Channel/Evidence columns still describe the representative. `QC_REPORT.csv` keeps its file rows and legacy Defect Candidates count column. Explicit zero-run policy findings retain their prior single-channel shape. Schema 2 consumers that assumed one channel per row must use the new channels array.
+JSON schema **4** retains the `defects` list and its scalar fields, now representing operator-facing issues. Detector issues add `channels` and `channel_events`; each nested event retains its original sample/timestamp/measurements, raw count, sample bounds and report-only TC. `summary.defect_issues` is the row count; `defect_candidates` remains a legacy alias for that count. `QC_DEFECTS.csv` has one row per issue and appends Channels, Channel Events, Merged Candidate Count and sample bounds; the existing scalar Channel/Evidence columns still describe the representative. `QC_REPORT.csv` keeps its file rows and legacy Defect Candidates count column. Explicit zero-run policy findings retain their prior single-channel shape. Schema 2 consumers that assumed one channel per row must use the new channels array.
 
 Mixed mono/stereo/surround counts are informational unless `channels.allowed` is configured. Group duration/format differences warn because the folder may contain unrelated programmes. Default missing-stem inference requires at least two exact delimited DIA/FX/MX tokens with the same parent and name skeleton, such as `REEL01_DIA_v2.wav` and `REEL01_FX_v2.wav`. It never assumes every folder requires an M&E/full mix. Explicit `expected_stems` uses those same name groups and still warns.
 
@@ -297,3 +297,26 @@ The local PySide6 GUI is now installed in this project's virtual environment and
 - [FFmpeg timecode reference, including drop-frame numbering](https://ffmpeg.org/doxygen/trunk/timecode_8c.html)
 
 The application does not access these documentation links at runtime.
+
+
+## Reliability hotfix: measurement and execution contract
+
+Schema 4 adds `audio_compliance`, `execution_status`, `measurement_outcomes` and `operational_diagnostics`. The existing `status` remains an alias of audio compliance and now supports `INCOMPLETE`. File-level CSV appends the new fields without moving existing columns. Schema 3 consumers must accept the new enum and distinguish execution from compliance; defect/sample/timecode fields and QC thresholds are unchanged.
+
+- Measurement outcomes: `SUCCESS`, `UNAVAILABLE` (e.g. silence/below gate/too short or unsupported channel weighting), and `ERROR` (process failure, timeout, invalid/missing required output). Disabled measurements are not scheduled and have no outcome entry.
+- The requested sample pass and requested Integrated/True Peak results must complete. Loudness enabled schedules Integrated and True Peak even in report-only mode; a True Peak limit alone schedules the same EBU pass, but Integrated is not required when loudness is disabled. LRA and maxima remain report-only; no new delivery limits are introduced.
+- Execution: `COMPLETED`, `COMPLETED_WITH_WARNINGS` (optional diagnostics), `PARTIAL` (required operation failed but sample results exist), or `FAILED` (no sample results, or required report export failed). An acoustic FAIL can coexist with completed execution. Incomplete analysis takes precedence in the overall compliance label; existing valid FAIL checks are never removed.
+- Requested evidence is a required output operation: an export error returns 2 and marks execution partial, retaining the original measurements, forensic events and acoustic status. It does not create an acoustic defect or artificial FAIL.
+- Silence remains numeric null with an `UNAVAILABLE` reason and existing QC WARNING semantics. It is not a process error. Malformed/non-finite metadata cannot reuse an earlier value to pass QC; negative-infinity logarithmic silence is distinguished from NaN/corrupt output.
+
+A report set is delivered only when its **QC_COMPLETE.json** marker exists, created atomically after all JSON/HTML/CSV files are written. The marker confirms report delivery, not successful QC: inspect its execution/compliance fields. A lone JSON or HTML may be a partial export. On report failure the CLI returns 2, never announces report success, and attempts an additional **QC_RECOVERY.json** snapshot with execution FAILED and preserved analysis. Recovery is best effort; full disks or denied permissions can prevent it too. Existing partial files are not overwritten.
+
+Logging failures known before report finalization appear in both JSON and HTML as operational warnings. Events after finalization (including final-summary writes or closing logs) are best-effort stderr diagnostics; completed reports remain snapshots and are not rewritten. Optional log failures never invalidate measured audio. Close/write warnings bypass file logging to avoid recursion. The GUI opens a complete partial-execution report with an explicit partial status; it rejects an unfinished report set.
+
+Reproduce the operational acceptance scenarios using a NEW output directory:
+
+```sh
+python scripts/verify_hotfix_release.py --output /tmp/audio-qc-acceptance-NEW
+```
+
+This creates controlled 48 kHz/24-bit fixtures, asserts scenarios A–F, verifies source SHA-256/size/mtime, and emits `acceptance.json` with the actual checkout commit, tools and results. CI runs this after the full suite on both supported Python versions. An optional `--baseline-source /path/to/extracted/audio-delivery-qc/src` compares all measurement dictionaries exactly using the same runtime. See `HOTFIX_IMPLEMENTATION.md` for the implementation and validation record. No M5/M6 work is included.

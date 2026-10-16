@@ -15,7 +15,7 @@ def write_csv(report, path):
                "Sample Rate", "Codec", "PCM Format", "Bit Depth", "Channels", "Layout", "Peak dBFS", "True Peak dBTP",
                "Integrated LUFS", "LRA LU", "Max Momentary LUFS", "Max Short-term LUFS", "BWF", "TimeReference",
                "Originator", "OriginationDate", "OriginationTime", "Defect Candidates", "SHA-256", "Audio SHA-256", "Warnings", "Errors",
-               "Reporting Frame Rate", "TC Source", "File Start TC", "File Start TC Day Offset", "Defect TCs"]
+               "Reporting Frame Rate", "TC Source", "File Start TC", "File Start TC Day Offset", "Defect TCs", "Audio Compliance", "Execution Status", "Operational Diagnostics", "Measurement Outcomes"]
     with path.open("x", encoding="utf-8-sig", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(columns)
@@ -32,6 +32,9 @@ def write_csv(report, path):
                    a["timecode_reporting"]["frame_rate"]["label"], a["timecode_reporting"]["source_label"],
                    a["timecode_reporting"]["file_start_timecode"], a["timecode_reporting"]["file_start_day_offset"],
                    " | ".join(f"{e['timecode']} (+{e['timecode_day_offset']}d), offset {e['offset']}, ch {','.join(map(str, e.get('channels', [e['channel']])))}, sample {e['sample_index']}" for e in a["defects"])]
+            row += [a["audio_compliance"], a["execution_status"],
+                    json.dumps(a["operational_diagnostics"], ensure_ascii=False),
+                    json.dumps(a["measurement_outcomes"], ensure_ascii=False)]
             writer.writerow([safe_cell(v) for v in row])
 
 

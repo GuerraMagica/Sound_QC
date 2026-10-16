@@ -9,9 +9,9 @@ from . import __version__
 from .config import ConfigError, PRESETS, load_config
 from .consistency import group_checks
 from .diagnostics import RunLog
-from .models import AudioFile, Check, Status
+from .models import AudioFile, Check, Status, OperationalDiagnostic
 from .process import ToolError, check_tools
-from .reports import build_report, write_reports
+from .reports import build_report, write_reports, write_recovery
 from .scanner import discover, inspect_file
 from .snippets import export_snippets
 from .timecode import SOURCES
@@ -64,6 +64,16 @@ def main(argv=None):
     logs = RunLog(verbose=getattr(args, "verbose", False))
     log = logs.logger
     output = None
+    report = None
+
+    def recover(error):
+        if report is not None and output is not None:
+            try:
+                write_recovery(report, output, error)
+                log.error("Available analysis saved as recovery data: %s", output / "QC_RECOVERY.json")
+            except Exception:
+                logs.console_warning("Recovery data could not be saved; report delivery failed.")
+
     try:
         if args.command == "gui":
             from .gui import main as gui_main
@@ -114,38 +124,52 @@ def main(argv=None):
             audio = None
             try:
                 audio = inspect_file(path, config, args.hash, progress)
-                if args.export_defect_snippets:
-                    progress("Exporting evidence", 0)
-                    export_snippets(audio, output, config, i)
             except Exception as exc:
                 # Unexpected errors remain visible but cannot abort the delivery.
                 log.error("Unexpected inspection error for %s", path, exc_info=True)
                 if audio is None:
                     audio = AudioFile(str(path), path.name)
-                audio.add("unexpected_inspection_error", Status.FAIL, f"{type(exc).__name__}: {exc}")
+                audio.operational("unexpected_inspection_error", f"{type(exc).__name__}: {exc}",
+                                  required=True, affects_analysis=True)
+            if args.export_defect_snippets:
+                try:
+                    progress("Exporting evidence", 0)
+                    export_snippets(audio, output, config, i)
+                except Exception as exc:
+                    log.error("Evidence export failed for %s", path, exc_info=True)
+                    audio.operational("snippet_export", f"{type(exc).__name__}: {exc}", required=True)
             files.append(audio)
             log.debug("[%s/%s] %s · %s", i, len(paths), audio.status, path.name)
             for check in audio.checks:
                 log.debug("%s · %s · %s · %s", path.name, check.status, check.code, check.message)
+            for diagnostic in audio.operational_diagnostics:
+                (log.error if diagnostic.required else log.warning)("%s · %s · %s", path.name, diagnostic.code, diagnostic.message)
             logs.warnings()
         checks = notices + group_checks(files, config)
-        for message in logs.warnings():
-            checks.append(Check("diagnostic_log", Status.WARNING, message))
-        report = build_report(source, files, checks, config, versions, time.monotonic()-started)
+        diagnostics = [OperationalDiagnostic("diagnostic_log", message) for message in logs.warnings()]
+        for check in list(checks):
+            if check.code == "directory_read":
+                checks.remove(check)
+                diagnostics.append(OperationalDiagnostic(check.code, check.message, required=True, affects_analysis=True))
+        report = build_report(source, files, checks, config, versions, time.monotonic()-started, diagnostics)
         write_reports(report, output)
-        log.info("%s · %s files · %s PASS · %s WARNING · %s FAIL", report["status"], len(files),
+        log.info("Execution %s · Audio QC %s · %s files · %s PASS · %s WARNING · %s FAIL", report["execution_status"], report["status"], len(files),
                  report["summary"]["PASS"], report["summary"]["WARNING"], report["summary"]["FAIL"])
         log.info("HTML report: %s", output / "QC_REPORT.html")
+        if report["execution_status"] in ("PARTIAL", "FAILED") or report["status"] == "INCOMPLETE":
+            return 2
         return 1 if report["status"] == "FAIL" else 0
     except (ConfigError, ToolError, ValueError, OSError) as exc:
         log.error("audio-qc: %s", exc, exc_info=output is not None)
+        recover(exc)
         logs.warnings()
         return 2
     except KeyboardInterrupt:
         log.warning("audio-qc: Scan cancelled; source files were opened read-only. Partial evidence may remain in the new report folder.")
         return 130
-    except Exception:
+    except Exception as exc:
         log.error("❌ An unexpected error occurred.", exc_info=True)
+        recover(exc)
         logs.warnings()
         if logs.error_saved():
             log.error("Check error.log for more details: %s", output / "error.log")

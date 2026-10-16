@@ -1,6 +1,5 @@
 from pathlib import Path
 from .process import ffmpeg_input, stream_process, ToolError
-from .models import Status
 
 
 def export_snippets(audio, output: Path, config, file_index: int):
@@ -13,7 +12,7 @@ def export_snippets(audio, output: Path, config, file_index: int):
         target = output / relative
         # Exclusive target check plus -n: existing files can never be overwritten.
         if target.exists():
-            audio.add("snippet_export", Status.WARNING, f"Snippet already exists: {relative}")
+            audio.operational("snippet_export", f"Snippet already exists: {relative}", required=True)
             continue
         if getattr(event, "channel_events", None):
             first = event.cluster_first_sample / audio.sample_rate
@@ -35,4 +34,4 @@ def export_snippets(audio, output: Path, config, file_index: int):
                     pass
             event.snippet = relative.as_posix()
         except (ToolError, OSError) as exc:
-            audio.add("snippet_export", Status.WARNING, f"Evidence export failed for event {n}: {exc}")
+            audio.operational("snippet_export", f"Evidence export failed for event {n}: {exc}", required=True)

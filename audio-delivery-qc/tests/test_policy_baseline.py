@@ -1,6 +1,7 @@
 """Golden data captured from M2.1 before the M3 production refactor."""
 import json
 import math
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -50,6 +51,10 @@ def baseline_media(folder):
 
 def normalized(audio, folder):
     result = json.loads(json.dumps(audio.to_dict()).replace(str(folder), '<SOURCE>'))
+    assert result.pop('audio_compliance') == result['status']
+    result.pop('execution_status')
+    result.pop('measurement_outcomes')
+    result.pop('operational_diagnostics')
     # M3.1 adds issue structure. These mono golden fixtures must still retain
     # every legacy value; never rewrite the pre-M3 golden data.
     for event in result['defects']:
@@ -102,13 +107,30 @@ def test_pre_m3_reports_and_decisions_unchanged(tmp_path, case):
     policy = baseline_policy(case)
     files = [inspect_file(path, policy, with_hash=True) for path in paths]
     golden = json.loads((Path(__file__).parent/'fixtures'/'m3_baseline.json').read_text())
-    assert_baseline_matches([normalized(audio, source) for audio in files], golden[case])
+    expected = deepcopy(golden[case])
+    for audio, previous in zip(files, expected):
+        for check in previous['checks']:
+            check['message'] = check['message'].replace('short, silent, below gate, or failed analysis', 'short, silent, below gate, or not measured')
+        if audio.filename == 'broken.wav':
+            # H3 intentionally moves the decode error out of acoustic checks.
+            # Compare the exact original diagnostic and every other fact.
+            prior = previous['checks'].pop(0)
+            diagnostic, = audio.operational_diagnostics
+            assert diagnostic.code == prior['code'] == 'inspection'
+            assert diagnostic.message.replace(str(source), '<SOURCE>') == prior['message']
+            assert diagnostic.required and diagnostic.affects_analysis
+            assert audio.execution_status == 'FAILED'
+            previous['status'] = 'INCOMPLETE'
+        else:
+            assert audio.execution_status == 'COMPLETED'
+            assert not audio.operational_diagnostics
+    assert_baseline_matches([normalized(audio, source) for audio in files], expected)
     report = build_report(source, files, [], policy, {}, 0)
     output = tmp_path/'reports'
     output.mkdir()
     write_reports(report, output)
     saved = json.loads((output/'QC_REPORT.json').read_text())
-    assert saved['schema_version'] == 3
+    assert saved['schema_version'] == 4
     assert saved['status'] == report['status']
     assert all((output/name).is_file() for name in ('QC_REPORT.html','QC_REPORT.csv','QC_DEFECTS.csv'))
     assert 'http://' not in (output/'QC_REPORT.html').read_text()

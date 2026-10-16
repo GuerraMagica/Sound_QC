@@ -319,10 +319,10 @@ class QCWindow(QMainWindow):
         self.settings.setEnabled(True)
         self.run_button.setEnabled(True)
         self.progress.setRange(0, 1)
-        completed = code in (0, 1) and self.report_path is not None and self.report_path.is_file()
+        completed = code in (0, 1, 2) and self.report_path is not None and self.report_path.is_file() and (self.report_path.parent / "QC_COMPLETE.json").is_file()
         self.progress.setValue(1 if completed else 0)
         self.open_button.setEnabled(completed)
-        self.status.setText(("Completed with QC failures. " if code == 1 else "Completed. ") + str(self.report_path)
+        self.status.setText(("Partial execution; review operational diagnostics. " if code == 2 else "Completed with QC failures. " if code == 1 else "Completed. ") + str(self.report_path)
                             if completed else "Scan could not complete. See the progress log for details.")
 
     def process_error(self, _):

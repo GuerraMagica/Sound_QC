@@ -102,7 +102,7 @@ def test_log_failure_remains_visible_in_report(scan, monkeypatch, capsys):
     monkeypatch.setattr(SafeFileHandler, '_open', denied)
     assert main([str(source), '--output', str(output)]) == 0
     report = json.loads((output / 'QC_REPORT.json').read_text())
-    assert any(c['code'] == 'diagnostic_log' for c in report['group_checks'])
+    assert any(c['code'] == 'diagnostic_log' for c in report['operational_diagnostics'])
     assert 'log denied' in capsys.readouterr().err
 
 
@@ -120,9 +120,9 @@ def test_per_file_error_continues_and_preserves_previous_measurements(scan, monk
             raise RuntimeError('export bug')
     monkeypatch.setattr('audio_qc.cli.inspect_file', inspect)
     monkeypatch.setattr('audio_qc.cli.export_snippets', export)
-    assert main([str(source), '--output', str(output), '--export-defect-snippets']) == 1
+    assert main([str(source), '--output', str(output), '--export-defect-snippets']) == 2
     report = json.loads((output / 'QC_REPORT.json').read_text())
-    assert len(calls) == 2 and report['files'][0]['status'] == 'FAIL'
+    assert len(calls) == 2 and report['files'][0]['status'] == 'INFO'
     assert all(a['measurements']['integrated_lufs'] == -23.125 for a in report['files'])
     assert 'export bug' in (output / 'error.log').read_text()
     assert 'Traceback' not in capsys.readouterr().err
@@ -218,7 +218,8 @@ def test_failed_ffmpeg_summary_never_becomes_valid_measurement(wav, config, monk
     assert audio.measurements.get('integrated_lufs') is None
     assert audio.measurements.get('true_peak_dbtp') is None
     assert 'decoder failed' in audio.measurements['loudness_unavailable']
-    assert next(c for c in audio.checks if c.code == 'integrated_loudness').status == 'WARNING'
+    assert next(c for c in audio.checks if c.code == 'integrated_loudness').status == 'INCOMPLETE'
+    assert audio.execution_status == 'PARTIAL'
 
 
 @pytest.mark.integration

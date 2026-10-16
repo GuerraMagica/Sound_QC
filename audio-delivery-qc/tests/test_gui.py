@@ -68,3 +68,23 @@ def test_gui_runs_real_cli_with_selected_rate(window, wav):
     assert report["timecode_reporting"]["frame_rate"]["label"] == "29.97 DF"
     assert report["files"][0]["timecode_reporting"]["file_start_timecode"] == "10:00:00;00"
     assert "HTML report:" in window.log.toPlainText()
+
+
+@pytest.mark.parametrize("complete", [True, False])
+def test_gui_partial_execution_only_opens_complete_report_set(window, tmp_path, complete):
+    from audio_qc.models import AudioFile
+    from audio_qc.config import load_config
+    from audio_qc.reports import build_report, write_reports
+    audio = AudioFile("/fixture.wav", "fixture.wav", measurements={"decoded_sample_frames": 1})
+    audio.operational("integrated_lufs", "measurement failed", required=True, affects_analysis=True)
+    report = build_report(tmp_path, [audio], [], load_config(), {}, 0)
+    write_reports(report, tmp_path)
+    if not complete:
+        (tmp_path / "QC_COMPLETE.json").unlink()
+    window.report_path = tmp_path / "QC_REPORT.html"
+    window.scan_finished(2)
+    assert window.open_button.isEnabled() == complete
+    if complete:
+        assert "Partial execution" in window.status.text()
+    else:
+        assert "could not complete" in window.status.text()

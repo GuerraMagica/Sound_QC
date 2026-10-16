@@ -7,7 +7,7 @@ from copy import deepcopy
 from dataclasses import replace
 
 from .measurement import MeasurementContext, MeasurementRequirements
-from .models import AudioFile, Check, Status, Defect
+from .models import AudioFile, Check, Status, Defect, MeasurementState as MS
 
 
 def measurement_requirements(policy: dict, with_hash=False) -> MeasurementRequirements:
@@ -23,17 +23,22 @@ def measurement_requirements(policy: dict, with_hash=False) -> MeasurementRequir
                                    timeout_seconds=policy["process_timeout_seconds"])
 
 
-def evaluate_level_policy(m: dict, c: dict) -> list[Check]:
+def evaluate_level_policy(m: dict, c: dict, outcomes=None) -> list[Check]:
     """Shared level rules over measured facts, independent of physical files."""
     checks = []
+    outcomes = outcomes or {}
+    def failed(metric):
+        return metric in outcomes and outcomes[metric].state == MS.ERROR
     def add(code, status, message):
         checks.append(Check(code, status, message))
     if c["loudness"]["enabled"]:
         value = m.get("integrated_lufs")
         target = c["loudness"]["target_lufs"]
-        if value is None:
+        if failed("integrated_lufs"):
+            add("integrated_loudness", Status.INCOMPLETE, outcomes["integrated_lufs"].reason)
+        elif value is None:
             add("integrated_loudness", Status.WARNING,
-                  m.get("loudness_unavailable", "Integrated loudness unavailable (short, silent, below gate, or failed analysis)"))
+                  m.get("loudness_unavailable", "Integrated loudness unavailable (short, silent, below gate, or not measured)"))
         elif target is not None:
             ok = abs(value-target) <= c["loudness"]["tolerance"] + 1e-9
             add("integrated_loudness", Status.PASS if ok else Status.FAIL,
@@ -45,7 +50,9 @@ def evaluate_level_policy(m: dict, c: dict) -> list[Check]:
         add("integrated_loudness", Status.INFO, "Loudness checks disabled by configuration")
     if c["loudness"]["enabled"] or c["true_peak"]["maximum"] is not None:
         value, limit = m.get("true_peak_dbtp"), c["true_peak"]["maximum"]
-        if value is None:
+        if failed("true_peak_dbtp"):
+            add("true_peak", Status.INCOMPLETE, outcomes["true_peak_dbtp"].reason)
+        elif value is None:
             add("true_peak", Status.WARNING, "True Peak unavailable; no numeric value or failure inferred")
         else:
             add("true_peak", Status.INFO if limit is None else Status.FAIL if value > limit + 1e-9 else Status.PASS,
@@ -102,7 +109,7 @@ def _evaluate_file(a: AudioFile, c: dict, context: MeasurementContext):
             add("nonfinite_samples", Status.FAIL, f"{m['nonfinite_samples']} non-finite floating-point samples")
         if m["digital_silence"]:
             add("silence", Status.INFO, "All decoded samples are digital zero; logarithmic levels unavailable")
-    checks.extend(evaluate_level_policy(m, c))
+    checks.extend(evaluate_level_policy(m, c, a.measurement_outcomes))
     if defects:
         add("defect_candidates", Status.WARNING, f"{len(defects)} possible defects require human review")
     elif c["defects"]["enabled"] and "decoded_sample_frames" in m:

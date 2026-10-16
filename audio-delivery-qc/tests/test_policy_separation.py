@@ -135,7 +135,9 @@ def test_decode_failure_retains_earlier_measurement_diagnostic(wav, config, monk
     monkeypatch.setattr('audio_qc.samples.StreamingDefects',unavailable)
     monkeypatch.setattr('audio_qc.samples.stream_process',failed)
     audio = inspect_file(wav,config)
-    assert [(c.code,c.status) for c in audio.checks[:2]] == [('defects_unavailable','WARNING'),(code,'FAIL')]
+    assert audio.checks[0].code == 'defects_unavailable'
+    assert any(d.code == code and d.affects_analysis for d in audio.operational_diagnostics)
+    assert audio.status == 'INCOMPLETE'
     assert audio.measurements.get('decoded_sample_frames') is None
 
 
@@ -176,5 +178,5 @@ def test_final_source_guard_still_runs_after_policy(wav, config, monkeypatch):
     monkeypatch.setattr('audio_qc.scanner.assess_file',assess)
     monkeypatch.setattr(Path,'stat',stat)
     audio = inspect_file(wav,config)
-    assert audio.checks[-1].code == 'source_changed'
-    assert audio.checks[-1].status == 'FAIL'
+    assert audio.operational_diagnostics[-1].code == 'source_changed'
+    assert audio.status == 'INCOMPLETE'

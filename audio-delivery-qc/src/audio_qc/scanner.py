@@ -6,7 +6,7 @@ from .hashing import sha256_file
 from .loudness import measure_loudness
 from .metadata import inspect_metadata
 from .measurement import MeasurementContext, MeasurementRequirements
-from .models import AudioFile, Check, Status
+from .models import AudioFile, Check, Status, MeasurementOutcome, MeasurementState as MS
 from .process import ToolError
 from .rules import assess_file, measurement_requirements
 from .samples import analyze_samples
@@ -46,7 +46,7 @@ def inspect_file(path: Path, config: dict, with_hash=False, progress=None) -> Au
     result = assess_file(audio, config, context)
     _check_source_state(path, context)  # Keep the original final check after policy evaluation.
     if context.source_change_error is not None:
-        result.add("source_changed", Status.FAIL, context.source_change_error)
+        result.operational("source_changed", context.source_change_error, required=True, affects_analysis=True)
     return result
 
 
@@ -90,13 +90,14 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
             for warning in audio.bwf.get("warnings", []):
                 audio.add("bwf_metadata", Status.WARNING, warning)
         except OSError as exc:
-            audio.add("bwf_unavailable", Status.WARNING, str(exc))
+            audio.operational("bwf_unavailable", str(exc), required=True, affects_analysis=True)
         inspect_metadata(path, audio)
         try:
             try:
                 analyze_samples(path, audio, requirements, context, phase("Audio samples"))
             finally:
                 sample_diagnostics()
+            audio.measurement_outcomes["samples"] = MeasurementOutcome(MS.SUCCESS)
             audio.add("readability", Status.PASS, "Complete audio stream decoded successfully")
             expected = audio.bwf.get("declared_sample_frames")
             decoded = audio.measurements["decoded_sample_frames"]
@@ -105,18 +106,31 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
             if audio.duration_seconds is not None and abs(audio.duration_seconds-audio.decoded_duration_seconds) > max(2/audio.sample_rate, 0.001):
                 audio.add("duration_metadata", Status.WARNING, "Container duration differs from fully decoded duration")
         except (ToolError, OSError) as exc:
-            audio.add("readability", Status.FAIL, f"Audio decode failed: {exc}")
+            audio.measurement_outcomes["samples"] = MeasurementOutcome(MS.ERROR, str(exc))
+            audio.operational("readability", f"Audio decode failed: {exc}", required=True, affects_analysis=True)
         if requirements.ebur128:
             try:
-                audio.measurements.update(measure_loudness(path, audio, requirements.timeout_seconds, phase("EBU R128")))
-            except (ToolError, OSError) as exc:
+                measured = measure_loudness(path, audio, requirements.timeout_seconds, phase("EBU R128"))
+                audio.measurement_outcomes.update(measured.pop("measurement_outcomes", {}))
+                audio.measurements.update(measured)
+            except Exception as exc:
                 audio.measurements["loudness_unavailable"] = f"FFmpeg EBU R128 analysis unavailable: {exc}"
-    except (ToolError, OSError, ValueError) as exc:
-        audio.add("inspection", Status.FAIL, str(exc))
+                for metric in ("integrated_lufs", "true_peak_dbtp"):
+                    audio.measurement_outcomes[metric] = MeasurementOutcome(MS.ERROR, str(exc))
+            for metric, requested in (("integrated_lufs", requirements.loudness), ("true_peak_dbtp", requirements.true_peak)):
+                if requested:
+                    outcome = audio.measurement_outcomes.get(metric)
+                    if outcome is None:
+                        outcome = MeasurementOutcome(MS.ERROR, "Requested measurement outcome missing")
+                        audio.measurement_outcomes[metric] = outcome
+                    if outcome.state == MS.ERROR:
+                        audio.operational(metric, outcome.reason, required=True, affects_analysis=True)
+    except Exception as exc:
+        audio.operational("inspection", str(exc), required=True, affects_analysis=True)
     if requirements.hash:
         try:
             audio.sha256 = sha256_file(path, phase("SHA-256"))
         except OSError as exc:
-            audio.add("hash_unavailable", Status.WARNING, str(exc))
+            audio.operational("hash_unavailable", str(exc), required=True)
     _check_source_state(path, context)
     return audio, context

@@ -79,10 +79,11 @@ def test_corrupt_does_not_abort_and_source_is_unchanged(tmp_path):
     bad.write_bytes(b"corrupt")
     before = {p: (hashlib.sha256(p.read_bytes()).hexdigest(), p.stat().st_mtime_ns) for p in (good, bad)}
     out = tmp_path/"result"
-    assert main(["inspect", str(source), "--hash", "--output", str(out), "--quiet"]) == 1
+    assert main(["inspect", str(source), "--hash", "--output", str(out), "--quiet"]) == 2
     report = json.loads((out/"QC_REPORT.json").read_text())
     assert report["summary"]["total_files"] == 2
-    assert report["summary"]["FAIL"] == 1
+    assert report["summary"]["INCOMPLETE"] == 1
+    assert report["execution_status"] == "PARTIAL"
     assert report["summary"]["PASS"] == 1
     for path, state in before.items():
         assert (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mtime_ns) == state
