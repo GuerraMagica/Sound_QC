@@ -13,6 +13,12 @@ from .consolidation import CLICK, _cluster, _merge
 from .models import Defect, DefectIssue, highest_severity
 
 
+def can_join_issue(first, start, tolerance, issue_type, event_type, channels, channel):
+    """Canonical fixed-earliest-start/type/channel rule, in exact sample space."""
+    return (0 <= start - first <= tolerance and issue_type == event_type
+            and channel not in channels)
+
+
 def _issue(events):
     events = sorted(events, key=lambda e: e.channel)
     representative = min(events, key=lambda e: (e.sample_index, e.channel))
@@ -76,8 +82,9 @@ class IssueConsolidator:
                 self.issues[index] = _issue([_merge(e, event) if e.channel == event.channel else e for e in events])
                 continue
             index = next((i for i in self.joinable
-                          if self.issues[i].event_type == event.event_type
-                          and event.channel not in self.issues[i].channels), None)
+                          if can_join_issue(self.issues[i].cluster_first_sample, event.cluster_first_sample,
+                                            self.issue_gap, self.issues[i].event_type, event.event_type,
+                                            self.issues[i].channels, event.channel)), None)
             if index is not None:
                 self.issues[index] = _issue([*self.issues[index].channel_events, event])
             elif self.limit is None or len(self.issues) < self.limit:

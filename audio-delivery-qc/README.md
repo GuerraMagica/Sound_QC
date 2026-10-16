@@ -320,3 +320,17 @@ python scripts/verify_hotfix_release.py --output /tmp/audio-qc-acceptance-NEW
 ```
 
 This creates controlled 48 kHz/24-bit fixtures, asserts scenarios A–F, verifies source SHA-256/size/mtime, and emits `acceptance.json` with the actual checkout commit, tools and results. CI runs this after the full suite on both supported Python versions. An optional `--baseline-source /path/to/extracted/audio-delivery-qc/src` compares all measurement dictionaries exactly using the same runtime. See `HOTFIX_IMPLEMENTATION.md` for the implementation and validation record. No M5/M6 work is included.
+
+## M5 — optional multiple-mono programme groups
+
+Use `--detect-groups` to recognize exact `_L`/`_R`/`_C`/`_LFE`/`_Ls`/`_Rs`
+(and period-delimited) filenames, or `--groups programme_groups.yaml` for strict
+explicit definitions and custom suffixes. Stereo and 5.1 membership, PCM mono
+format, exact sample counts, rates and BWF alignment are validated before
+cross-file issue consolidation. Rejected groups preserve independent file QC.
+The GUI offers the same options and shows mappings and validation results.
+
+One programme issue retains all source events and labelled mono evidence links.
+File/group counts are separate. **Combined programme loudness, LRA and True Peak
+are not measured in M5.** See [configuration, conservative alignment rules,
+report compatibility and reproducible validation](docs/PROGRAMME_GROUPS.md).

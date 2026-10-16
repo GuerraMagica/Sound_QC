@@ -9,9 +9,10 @@ from ..timecode import file_timecode, parse_frame_rate
 from .csv_report import write_csv, write_defects_csv
 from .html_report import write_html
 from .json_report import write_json
+from .programme_report import programme_timecodes, write_group_csv
 
 
-def build_report(source, files, group_checks, config, versions, elapsed, operational_diagnostics=()):
+def build_report(source, files, group_checks, config, versions, elapsed, operational_diagnostics=(), programme_groups=(), programme_settings=None):
     operational_diagnostics = list(operational_diagnostics)
     counts = Counter(a.status.value for a in files)
     checks = group_checks + [c for a in files for c in a.checks]
@@ -21,6 +22,8 @@ def build_report(source, files, group_checks, config, versions, elapsed, operati
         compliance = Status.INCOMPLETE
     return {
         "schema_version": 4,
+        "programme_groups": programme_timecodes(programme_groups, config["timecode"]),
+        "programme_group_configuration": deepcopy(programme_settings),
         "audio_compliance": compliance.value,
         "execution_status": execution_status(diagnostics, any("decoded_sample_frames" in a.measurements for a in files), compliance == Status.INCOMPLETE).value,
         "operational_diagnostics": [asdict(d) for d in operational_diagnostics],
@@ -33,12 +36,17 @@ def build_report(source, files, group_checks, config, versions, elapsed, operati
         "status": compliance.value,
         "summary": {"total_files": len(files), **{s.value: counts[s.value] for s in Status},
                     "defect_candidates": sum(len(a.defects) for a in files),
-                    "defect_issues": sum(len(a.defects) for a in files)},
+                    "defect_issues": sum(len(a.defects) for a in files),
+                    "file_level_issues": sum(len(a.defects) for a in files),
+                    "group_level_issues": sum(len(g["issues"]) for g in programme_groups)},
         "defect_notice": DEFECT_NOTICE,
         "timecode_reporting": {"frame_rate": parse_frame_rate(config["timecode"]["frame_rate"]).as_dict(),
                                "requested_source": config["timecode"]["source"],
                                "manual_start": config["timecode"]["manual_start"]},
-        "conventions": {"sample_index": "zero-based relative to decoded file start",
+        "conventions": {"programme_groups": "separate optional multiple-mono view; exact source facts retained; no combined loudness or True Peak",
+                        "programme_validation": "structural/alignment result, not an audio compliance PASS/FAIL; delivery policy still assesses physical files",
+                        "group_positions": "group sample is aligned file sample; strict BWF validation requires identical origins; bounds inclusive on issues, exclusive on coverage",
+                        "sample_index": "zero-based relative to decoded file start",
                         "defects": "operator-facing issues; defect_candidates is a legacy count alias for defect_issues",
                         "channel_events": "per-channel forensic events after intra-channel consolidation; raw detection counts retained",
                         "issue_representative": "earliest channel representative, then lowest channel; scalar channel/duration/measurements describe that representative",
@@ -62,12 +70,17 @@ def write_reports(report, directory):
     write_html(report, directory / "QC_REPORT.html")
     write_defects_csv(report, directory / "QC_DEFECTS.csv")
 
+    deliverables = ["QC_REPORT.json", "QC_REPORT.csv", "QC_REPORT.html", "QC_DEFECTS.csv"]
+    if report.get("programme_group_configuration") is not None:
+        write_group_csv(report, directory / "QC_GROUP_ISSUES.csv")
+        deliverables.append("QC_GROUP_ISSUES.csv")
+
     # A missing marker identifies interrupted/partial report delivery. Never
     # announce success merely because the first JSON or HTML file exists.
     write_json({"schema_version": report["schema_version"],
                 "audio_compliance": report["audio_compliance"],
                 "execution_status": report["execution_status"],
-                "reports": ["QC_REPORT.json", "QC_REPORT.csv", "QC_REPORT.html", "QC_DEFECTS.csv"]},
+                "reports": deliverables},
                directory / ".QC_COMPLETE.json.tmp")
     (directory / ".QC_COMPLETE.json.tmp").replace(directory / "QC_COMPLETE.json")
 

@@ -3,10 +3,12 @@ from datetime import datetime, timezone
 from copy import deepcopy
 from pathlib import Path
 import sys
+import json
+import yaml
 from tempfile import TemporaryDirectory
 import uuid
 
-from PySide6.QtCore import QProcess, QUrl
+from PySide6.QtCore import QProcess, QUrl, Qt
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                               QGridLayout, QLabel, QLineEdit, QPushButton, QComboBox,
@@ -16,6 +18,8 @@ from .config import PRESETS, ConfigError, load_config, resolve_config, save_conf
 from .spec_editor import SpecificationEditor
 from .reports.specification import specification_rows
 from .timecode import RATES, SOURCES
+from .programme import load_group_settings, default_group_settings, discover_programmes
+from .scanner import discover
 
 
 class QCWindow(QMainWindow):
@@ -30,6 +34,7 @@ class QCWindow(QMainWindow):
         self._scan_directory = None
         self._scan_config = None
         self._running = False
+        self._group_settings = None
         root = QWidget()
         self.setCentralWidget(root)
         layout = QVBoxLayout(root)
@@ -112,6 +117,22 @@ class QCWindow(QMainWindow):
         for widget in (self.defects, self.snippets, self.hashes):
             options.addWidget(widget)
         form.addLayout(options)
+        group_row = QHBoxLayout()
+        self.group_detection = QCheckBox("Programme groups (naming / YAML)")
+        self.group_detection.toggled.connect(self.update_group_preview)
+        group_row.addWidget(self.group_detection)
+        group_load = QPushButton("Load groups…")
+        group_load.clicked.connect(self.select_groups)
+        group_row.addWidget(group_load)
+        group_clear = QPushButton("Use default naming")
+        group_clear.clicked.connect(self.reset_groups)
+        group_row.addWidget(group_clear)
+        form.addLayout(group_row)
+        self.group_preview = QLabel("Programme grouping disabled")
+        self.group_preview.setWordWrap(True)
+        self.group_preview.setTextFormat(Qt.PlainText)
+        form.addWidget(self.group_preview)
+        self.source.editingFinished.connect(self.update_group_preview)
         settings_scroll = QScrollArea()
         settings_scroll.setWidgetResizable(True)
         settings_scroll.setWidget(self.settings)
@@ -147,6 +168,46 @@ class QCWindow(QMainWindow):
         self.process.finished.connect(self.scan_finished)
         self.process.errorOccurred.connect(self.process_error)
 
+    def select_groups(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Load programme groups", "", "YAML (*.yaml *.yml)")
+        if path:
+            self.load_groups(Path(path))
+
+    def load_groups(self, path):
+        if self._running:
+            return False
+        try:
+            settings = load_group_settings(path)
+        except ValueError as exc:
+            self.status.setText(f"Invalid programme groups: {exc}")
+            return False
+        self._group_settings = settings
+        self.group_detection.setChecked(True)
+        self.update_group_preview()
+        return True
+
+    def reset_groups(self):
+        if self._running:
+            return
+        self._group_settings = None
+        self.group_detection.setChecked(True)
+        self.update_group_preview()
+
+    def update_group_preview(self, *_):
+        if not hasattr(self, "group_preview"):
+            return
+        if not self.group_detection.isChecked():
+            self.group_preview.setText("Programme grouping disabled")
+            return
+        settings = self._group_settings or default_group_settings()
+        source = Path(self.source.text()).expanduser()
+        paths = discover(source)[0] if self.source.text() and source.exists() else []
+        definitions = discover_programmes(paths, settings)
+        lines = [f"{g.name} ({g.layout}, {g.alignment}): " +
+                 ", ".join(f"{m.channel} ← {Path(m.file).name}" for m in g.members) for g in definitions]
+        self.group_preview.setText("\n".join(lines) + "\nMedia validation will run with QC." if lines else
+                                   "No naming groups found. Select source or load explicit YAML definitions.")
+
     def update_tc_controls(self, *_):
         manual = self.tc_source.currentText() == "MANUAL"
         self.manual_start.setEnabled(manual)
@@ -162,11 +223,13 @@ class QCWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, "Select audio file", "", "Audio (*.wav *.wave *.bwf *.rf64 *.bw64 *.w64 *.aif *.aiff *.flac);;All files (*)")
         if path:
             self.source.setText(path)
+            self.update_group_preview()
 
     def select_folder(self):
         path = QFileDialog.getExistingDirectory(self, "Select delivery folder")
         if path:
             self.source.setText(path)
+            self.update_group_preview()
 
     def select_config(self):
         path, _ = QFileDialog.getOpenFileName(self, "Cargar especificación QC", "", "YAML (*.yaml *.yml)")
@@ -266,11 +329,19 @@ class QCWindow(QMainWindow):
         except (ValueError, OSError):
             self._clear_snapshot()
             raise
+        group_snapshot = None
+        if self.group_detection.isChecked():
+            group_snapshot = Path(self._scan_directory.name) / "groups.yaml"
+            group_snapshot.write_text(yaml.safe_dump(deepcopy(self._group_settings or default_group_settings()),
+                                                     allow_unicode=True, sort_keys=False), encoding="utf-8")
+            group_snapshot.chmod(0o400)
         self._scan_config = deepcopy(config)
         timing = config["timecode"]
         args = ["inspect", self.source.text(), "--verbose", "--preset", config["preset"], "--config", str(snapshot),
                 "--frame-rate", timing["frame_rate"], "--timecode-source", timing["source"],
                 "--output", str(output)]
+        if group_snapshot is not None:
+            args.extend(["--groups", str(group_snapshot)])
         if timing["source"] == "MANUAL":
             args.extend(["--start-timecode", timing["manual_start"]])
         args.append("--defects" if self.defects.isChecked() else "--no-defects")
@@ -322,6 +393,17 @@ class QCWindow(QMainWindow):
         completed = code in (0, 1, 2) and self.report_path is not None and self.report_path.is_file() and (self.report_path.parent / "QC_COMPLETE.json").is_file()
         self.progress.setValue(1 if completed else 0)
         self.open_button.setEnabled(completed)
+        if completed:
+            try:
+                report = json.loads(self.report_path.with_suffix(".json").read_text(encoding="utf-8"))
+                groups = report.get("programme_groups", [])
+                if groups:
+                    self.group_preview.setText("\n".join(
+                        f'{g["name"]}: {g["validation_status"]} · ' + ", ".join(m["channel"] for m in g["members"]) +
+                        f' · {len(g["issues"])} issues · {g["defect_coverage"]}\n' +
+                        "; ".join(r["message"] for r in g["reasons"] + g["warnings"]) for g in groups))
+            except (OSError, ValueError, KeyError):
+                self.group_preview.setText("Programme details unavailable; inspect the report.")
         self.status.setText(("Partial execution; review operational diagnostics. " if code == 2 else "Completed with QC failures. " if code == 1 else "Completed. ") + str(self.report_path)
                             if completed else "Scan could not complete. See the progress log for details.")
 

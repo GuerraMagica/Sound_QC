@@ -28,6 +28,7 @@ def tc_label(tc, day):
 
 
 def write_html(report, path):
+    from .programme_report import programme_html
     s = report["summary"]
     timing = report["timecode_reporting"]
     specification = "".join(f"<tr><th>{esc(label)}</th><td>{esc(value)}</td></tr>"
@@ -39,9 +40,11 @@ def write_html(report, path):
     timing_header = (f'<p class="timing">Frame rate: <b>{esc(timing["frame_rate"]["label"])} fps</b> &nbsp; '
                      f'TC source: <b>{esc(source_label)}</b> ({esc(timing["requested_source"])}) &nbsp; '
                      f'File start TC: {start_label}</p>')
-    cards = "".join(f'<div class="card"><strong>{s[k]}</strong><span>{esc(k.replace("_", " "))}</span></div>'
+    cards = "".join(f'<div class="card"><strong>{s[k]}</strong><span>{esc("file-level issues" if k == "defect_issues" and report.get("programme_groups") else k.replace("_", " "))}</span></div>'
                     for k in ("total_files", "PASS", "WARNING", "FAIL", "INCOMPLETE", "defect_issues"))
     rows, details = [], []
+    grouped_paths = {m["file"] for g in report.get("programme_groups", [])
+                     if g["valid_for_consolidation"] for m in g["members"]}
     for index, a in enumerate(report["files"], 1):
         m, b = a["measurements"], a["bwf"]
         origin = a["timecode_reporting"]
@@ -83,6 +86,8 @@ def write_html(report, path):
         event_table = ('<h3>Defect issues</h3><div class="scroll"><table><thead><tr>'
                        '<th>Severity</th><th>Type</th><th>TC</th><th>Offset</th><th>Channels</th><th>Length (ms)</th><th>Method</th><th>Listen</th><th>Evidence</th>'
                        '</tr></thead><tbody>' + "".join(events) + '</tbody></table></div>') if events else ""
+        if events and a["path"] in grouped_paths:
+            event_table = '<details><summary>Original file-level issues (forensic view)</summary>' + event_table + '</details>'
         technical = {k: v for k, v in a.items() if k not in ("checks", "defects")}
         details.append(f'<article id="file-{index}"><h3>{index:03d} · {esc(a["filename"])} {badge(a["status"])}</h3>'
                        f'<p class="path">{esc(a["path"])}</p>{origin_line}<ul class="checks">{checks}</ul>{event_table}'
@@ -121,7 +126,8 @@ footer{{margin-top:32px;color:var(--muted);font-size:12px}}@media(max-width:800p
 <h2>Delivery overview</h2><div class="scroll"><table><thead><tr><th>Status</th><th>File / details</th><th>Duration (s)</th><th>Rate (Hz)</th><th>Bits</th><th>Ch</th><th>Layout</th><th>Peak (dBFS)</th><th>TP (dBTP)</th><th>I (LUFS)</th><th>LRA (LU)</th><th>BEXT</th><th>TimeReference</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 <h2>Operational diagnostics</h2><ul>{operational or "<li>No scan-level operational diagnostics.</li>"}</ul><p>{esc(report["report_delivery"])}</p>
 <h2>Group consistency</h2><ul class="checks">{groups or '<li>No group inconsistencies detected.</li>'}</ul>
-<h2>File checks and evidence</h2>{''.join(details) or '<p>No supported audio files found.</p>'}
+{programme_html(report)}
+<h2>Physical file checks and forensic evidence</h2>{''.join(details) or '<p>No supported audio files found.</p>'}
 <h2>Configuration and provenance</h2><details><summary>Configuration used</summary><pre>{esc(json.dumps(report['configuration'], ensure_ascii=False, indent=2))}</pre></details>
 <details><summary>Measurement conventions and tools</summary><pre>{esc(json.dumps({'conventions': report['conventions'], 'dependencies': report['dependencies']}, indent=2))}</pre></details>
 <footer>Self-contained local report. Source media opened read-only. No telemetry, remote assets or server required. True Peak is reported at 0.1 dB resolution; verify values near a delivery limit with the required reference meter. LRA is report-only.</footer>

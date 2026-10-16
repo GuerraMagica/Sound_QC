@@ -15,6 +15,7 @@ from .reports import build_report, write_reports, write_recovery
 from .scanner import discover, inspect_file
 from .snippets import export_snippets
 from .timecode import SOURCES
+from .programme import load_group_settings, default_group_settings, discover_programmes, build_programmes
 
 
 def parser():
@@ -26,6 +27,9 @@ def parser():
     inspect.add_argument("source", type=Path, help="Source file or directory")
     inspect.add_argument("--preset", choices=PRESETS)
     inspect.add_argument("--config", type=Path, help="YAML overrides; validated before scanning")
+    groups = inspect.add_mutually_exclusive_group()
+    groups.add_argument("--groups", type=Path, help="Strict YAML programme definitions / naming conventions")
+    groups.add_argument("--detect-groups", action="store_true", help="Opt in to exact _L/_R/.L/.R etc. programme naming")
     inspect.add_argument("--frame-rate", help='Reporting fps: 23.976, 24, 25, "29.97 NDF", "29.97 DF", 30')
     inspect.add_argument("--timecode-source", choices=SOURCES, type=str.upper, help="AUTO (default), FILE_RELATIVE or MANUAL")
     inspect.add_argument("--start-timecode", help="Manual start HH:MM:SS:FF (semicolon for DF); implies MANUAL unless source is explicitly set")
@@ -89,6 +93,8 @@ def main(argv=None):
             tc_overrides["manual_start"] = args.start_timecode
             tc_overrides["source"] = args.timecode_source or "MANUAL"
         config = load_config(args.config, args.preset, tc_overrides)
+        programme_settings = (load_group_settings(args.groups) if args.groups else
+                              default_group_settings() if args.detect_groups else None)
         if args.no_defects and args.export_defect_snippets:
             raise ConfigError("--no-defects conflicts with --export-defect-snippets")
         if args.defects or args.export_defect_snippets:
@@ -103,6 +109,17 @@ def main(argv=None):
             raise ValueError(f"Source is not a readable file or folder: {source}")
         versions = check_tools()
         paths, notices = discover(source)
+        definitions = discover_programmes(paths, programme_settings) if programme_settings is not None else ()
+        # Explicit definitions may include media outside the discovery root. Each
+        # canonical source is measured exactly once, including missing members.
+        if programme_settings is not None:
+            # Preserve discovery order (and existing evidence numbering).
+            paths = list(dict.fromkeys([p.resolve() for p in paths] +
+                                       [Path(m.file) for g in definitions for m in g.members]))
+        if args.output:
+            destination = args.output.expanduser().resolve()
+            if any(destination == p or destination in p.parents for p in paths):
+                raise ValueError("Report folder must not contain programme source members")
         output = create_output(source, args.output)
         logs.attach(output)
         started = time.monotonic()
@@ -146,12 +163,24 @@ def main(argv=None):
                 (log.error if diagnostic.required else log.warning)("%s · %s · %s", path.name, diagnostic.code, diagnostic.message)
             logs.warnings()
         checks = notices + group_checks(files, config)
-        diagnostics = [OperationalDiagnostic("diagnostic_log", message) for message in logs.warnings()]
+        diagnostics = []
         for check in list(checks):
             if check.code == "directory_read":
                 checks.remove(check)
                 diagnostics.append(OperationalDiagnostic(check.code, check.message, required=True, affects_analysis=True))
-        report = build_report(source, files, checks, config, versions, time.monotonic()-started, diagnostics)
+        programmes = build_programmes(definitions, files, detection_enabled=config["defects"]["enabled"],
+                                      cross_channel_merge_ms=config["defects"]["issues"]["cross_channel_merge_ms"],
+                                      max_issues=config["defects"]["max_candidates"])
+        for group in programmes:
+            log.info("Programme %s · %s · %s · Channels: %s", group["name"], group["validation_status"],
+                     group["alignment_mode"], ", ".join(m["channel"] for m in group["members"]))
+            for reason in group["reasons"] + group["warnings"]:
+                log.warning("Programme %s · %s · %s", group["name"], reason["code"], reason["message"])
+            for limitation in group["coverage_limitations"]:
+                log.warning("Programme %s · %s", group["name"], limitation)
+        diagnostics.extend(OperationalDiagnostic("diagnostic_log", message) for message in logs.warnings())
+        report = build_report(source, files, checks, config, versions, time.monotonic()-started, diagnostics,
+                              programmes, programme_settings)
         write_reports(report, output)
         log.info("Execution %s · Audio QC %s · %s files · %s PASS · %s WARNING · %s FAIL", report["execution_status"], report["status"], len(files),
                  report["summary"]["PASS"], report["summary"]["WARNING"], report["summary"]["FAIL"])
