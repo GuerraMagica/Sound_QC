@@ -1,4 +1,5 @@
 """Programme report views; grouping and validation happen before reporting."""
+from collections import Counter, defaultdict
 import csv
 from copy import deepcopy
 import json
@@ -13,6 +14,13 @@ def programme_timecodes(groups, settings):
     result = deepcopy(groups)
     rate = parse_frame_rate(settings["frame_rate"])
     for group in result:
+        group["programme_compliance"] = "NOT_EVALUATED"
+        group["compliance_note"] = ("M5 physical-file checks are diagnostic views, not assembled-programme compliance. "
+                                    "A mono LUFS comparison against a configured target does not evaluate programme loudness.")
+        group["issue_summary"] = {"retained_issues": len(group["issues"]),
+                                  "by_type": dict(sorted(Counter(i["event_type"] for i in group["issues"]).items())),
+                                  "by_severity": dict(sorted(Counter(str(i["severity"] or "UNCLASSIFIED") for i in group["issues"]).items())),
+                                  "coverage": group["defect_coverage"]}
         basis = "GROUP_RELATIVE"
         start = 0
         manual = 0
@@ -44,24 +52,35 @@ def programme_html(report):
         mapping = "".join(f'<li><b>{esc(m["channel"])}</b> ← {esc(m["file"])} · physical channel 1</li>' for m in group["members"])
         reasons = "".join(f'<li>{esc(r["code"])}: {esc(r["message"])}</li>' for r in group["reasons"] + group["warnings"])
         limitations = "".join(f'<li>{esc(r)}</li>' for r in group["coverage_limitations"])
-        rows = []
+        rows = defaultdict(list)
         for issue in group["issues"]:
             links = []
             for event in issue["channel_events"]:
                 label = f'Evidence {event["logical_channel"]} — {event["source_path"]}'
                 links.append(f'<a href="{quote(event["snippet"], safe="/")}" target="_blank" rel="noopener">{esc(label)}</a>'
                              if event["snippet"] else esc(label) + " (not exported)")
-            rows.append(f'<tr data-group-issue="{esc(issue["id"])}"><td>{esc(issue["id"])}</td><td>{badge(issue["severity"])}</td>'
+            rows[issue["event_type"]].append(f'<tr data-group-issue="{esc(issue["id"])}"><td>{esc(issue["id"])}</td><td>{badge(issue["severity"])}</td>'
                         f'<td>{esc(issue["event_type"])}</td><td>{tc_label(issue["timecode"], issue["timecode_day_offset"])}</td>'
                         f'<td>{esc(issue["offset"])}</td><td>Channels: {esc(", ".join(issue["channels"]))}</td>'
                         f'<td>{"<br>".join(links)}</td><td><details><summary>Source events / exact samples</summary>'
                         f'<pre>{esc(json.dumps(issue, ensure_ascii=False, indent=2))}</pre></details></td></tr>')
-        table = ('<div class="scroll"><table><thead><tr><th>ID</th><th>Severity</th><th>Type</th><th>TC</th><th>Group offset</th>'
-                 '<th>Logical channels</th><th>Source evidence</th><th>Provenance</th></tr></thead><tbody>' + ''.join(rows) + '</tbody></table></div>')
+        table = "".join(
+            f'<details class="issue-category"><summary>{esc(kind)} · {len(events)} retained issues</summary>'
+            '<div class="scroll"><table><thead><tr><th>ID</th><th>Severity</th><th>Type</th><th>TC</th><th>Group offset</th>'
+            '<th>Logical channels</th><th>Source evidence</th><th>Provenance</th></tr></thead><tbody>' +
+            ''.join(events) + '</tbody></table></div></details>' for kind, events in sorted(rows.items()))
+        coverage_notice = (f'<p class="notice"><b>Defect coverage: {esc(group["defect_coverage"])}</b> · '
+                           f'{len(group["issues"])} retained group issues. ' +
+                           ('These retained results do not represent full defect coverage.' if group["defect_coverage"] != "COMPLETE"
+                            else 'Automated candidates still require operator review.') + '</p>')
         facts = {k: v for k, v in group.items() if k not in ("issues",)}
         sections.append(f'<article><h3>{esc(group["name"])} · {esc(group["layout"])} · {esc(group["validation_status"])}</h3>'
                         f'<p>ID: {esc(group["id"])} · Alignment: {esc(group["alignment_mode"])} · '
-                        f'Defect coverage: {esc(group["defect_coverage"])}</p><ul>{mapping}</ul><ul>{reasons}{limitations}</ul>'
+                        f'Defect coverage: {esc(group["defect_coverage"])}</p>{coverage_notice}'
+                        '<p><b>Programme compliance: NOT_EVALUATED</b> · structural VALID does not mean delivery PASS.</p>'
+                        '<p>Mono Integrated LUFS versus the configured file target is a physical-channel diagnostic; '
+                        'it cannot establish programme loudness compliance. Physical channel count is per file; 5.1 uses six logical roles.</p>'
+                        f'<details><summary>Member mapping / alignment and coverage limitations</summary><ul>{mapping}{reasons}{limitations}</ul></details>'
                         '<p>Combined programme loudness: <b>Not measured in M5.</b> Combined True Peak: not measured. '
                         'Measurements and QC compliance below belong to physical files.</p>'
                         f'{table}<details><summary>Validation / coverage facts</summary><pre>{esc(json.dumps(facts, ensure_ascii=False, indent=2))}</pre></details></article>')

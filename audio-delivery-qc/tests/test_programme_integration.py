@@ -65,6 +65,7 @@ def test_real_cli_groups_evidence_reports_and_source_integrity(tmp_path, monkeyp
         assert shared[0]["timecode"] == "01:00:01:00"
         assert any(e["channels"] == ["L"] and e["sample_index"] == 96000 for e in group["issues"])
         for issue in group["issues"]:
+            assert issue["severity"] == Status.WARNING
             assert html.count('data-group-issue="' + issue["id"] + '"') == 1
             for event in issue["channel_events"]:
                 assert (output / event["snippet"]).is_file()

@@ -56,7 +56,8 @@ class SpecificationEditor(QGroupBox):
             entry("peak_value", "Máximo True Peak dBTP"))
         row(6, "BWF / BEXT", combo("bwf_mode", [("Ignorar", "ignored"), ("WARNING si falta", "warning"), ("Requerido", "required")]))
         row(7, "Canales físicos permitidos", entry("channels", "Canales físicos permitidos"))
-        self.channels.setPlaceholderText("Sin restricción; o lista: 1, 2, 6")
+        self.channels.setPlaceholderText("Por archivo: 1 (multiple-mono), 6 (5.1 interleaved); vacío = sin restricción")
+        self.channels.setToolTip("Número de canales físicos DENTRO de cada archivo. Un programa 5.1 multiple-mono tiene seis archivos de 1 canal; el layout lógico se valida en Programme groups.")
         row(8, "Clipping", combo("clipping", [("FAIL si cumple el criterio", True), ("WARNING si cumple el criterio", False)]))
         self.hint = QLabel("True Peak es un límite superior. Sin objetivo/máximo no hay fallo numérico. "
                            "La medición de True Peak se ejecuta si Loudness está activo o hay un máximo.")
@@ -64,6 +65,7 @@ class SpecificationEditor(QGroupBox):
         grid.addWidget(self.hint, 9, 0, 1, 3)
         grid.setColumnStretch(1, 1)
         grid.setColumnStretch(2, 1)
+        self.peak_value.textChanged.connect(self.update_enabled)
         for box in (self.rate_mode, self.loudness_mode, self.peak_mode):
             box.currentIndexChanged.connect(self.update_enabled)
 
@@ -76,6 +78,16 @@ class SpecificationEditor(QGroupBox):
         self.target.setEnabled(self.loudness_mode.currentData() == "target")
         self.tolerance.setEnabled(self.loudness_mode.currentData() == "target")
         self.peak_value.setEnabled(self.peak_mode.currentData())
+        if self.peak_mode.currentData():
+            try:
+                peak = f"máximo {numeric(self.peak_value.text(), 'True Peak'):g} dBTP"
+            except ConfigError:
+                peak = "máximo pendiente / inválido; el análisis no puede iniciarse"
+        else:
+            peak = "sin máximo; el valor desactivado no se aplica"
+        self.hint.setText(f"True Peak efectivo: {peak}. La medición se ejecuta si Loudness está activo o hay un máximo. "
+                          "Los objetivos y canales físicos se aplican por archivo. Un 5.1 multiple-mono usa seis archivos de 1 canal; "
+                          "el loudness integrado de cada mono no determina cumplimiento del programa (no evaluado en M5).")
 
     def set_config(self, config):
         self.select(self.rate_mode, config["sample_rate"]["required"] is not None)

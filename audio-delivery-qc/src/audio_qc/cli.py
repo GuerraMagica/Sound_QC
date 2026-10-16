@@ -182,6 +182,8 @@ def main(argv=None):
         report = build_report(source, files, checks, config, versions, time.monotonic()-started, diagnostics,
                               programmes, programme_settings)
         write_reports(report, output)
+        if programmes:
+            log.info("Programme compliance: NOT_EVALUATED in M5. The following Audio QC status covers physical-file diagnostics only.")
         log.info("Execution %s · Audio QC %s · %s files · %s PASS · %s WARNING · %s FAIL", report["execution_status"], report["status"], len(files),
                  report["summary"]["PASS"], report["summary"]["WARNING"], report["summary"]["FAIL"])
         log.info("HTML report: %s", output / "QC_REPORT.html")

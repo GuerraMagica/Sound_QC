@@ -30,6 +30,11 @@ def tc_label(tc, day):
 def write_html(report, path):
     from .programme_report import programme_html
     s = report["summary"]
+    compliance_label = "Physical-file QC diagnostics" if report.get("programme_groups") else "Audio QC"
+    programme_notice = ('<p class="notice"><b>Programme compliance: NOT_EVALUATED.</b> '
+                        'File PASS/FAIL counts below apply to configured physical-file checks. '
+                        'Mono Integrated LUFS does not measure assembled-programme loudness; no programme PASS/FAIL is inferred.</p>'
+                        if report.get("programme_groups") else "")
     timing = report["timecode_reporting"]
     specification = "".join(f"<tr><th>{esc(label)}</th><td>{esc(value)}</td></tr>"
                             for label, value in specification_rows(report["configuration"]))
@@ -92,6 +97,9 @@ def write_html(report, path):
         details.append(f'<article id="file-{index}"><h3>{index:03d} · {esc(a["filename"])} {badge(a["status"])}</h3>'
                        f'<p class="path">{esc(a["path"])}</p>{origin_line}<ul class="checks">{checks}</ul>{event_table}'
                        f'<details><summary>Technical metadata, measurements and hashes</summary><pre>{esc(json.dumps(technical, ensure_ascii=False, indent=2))}</pre></details></article>')
+        if a["path"] in grouped_paths:
+            details[-1] = (f'<details><summary>Physical file diagnostics: {esc(a["filename"])} {badge(a["status"])}</summary>'
+                           + details[-1] + '</details>')
     groups = "".join(f'<li>{badge(c["status"])} <b>{esc(c["code"])}</b> · {esc(c["message"])}'
                      + (f'<details><summary>Affected files ({len(c["files"])})</summary><pre>{esc(chr(10).join(c["files"]))}</pre></details>' if c["files"] else "") + '</li>' for c in report["group_checks"])
     operational = "".join(f'<li><b>{esc(d["code"])}</b> · {esc(d["message"])}</li>' for d in report["operational_diagnostics"])
@@ -116,17 +124,17 @@ article{{margin:14px 0;padding:20px;background:#fff;border:1px solid var(--line)
 details{{margin-top:12px}}summary{{cursor:pointer;color:#126a7c}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;max-width:100%;background:#f2f5f7;padding:14px;border-radius:5px}}td pre{{min-width:230px;margin:0}}
 footer{{margin-top:32px;color:var(--muted);font-size:12px}}@media(max-width:800px){{.cards{{grid-template-columns:repeat(3,1fr)}}h1{{font-size:22px}}}}@media print{{header{{color:#172c38;background:#fff}}main{{padding:10px}}.scroll{{overflow:visible}}table{{font-size:8px}}th,td{{padding:4px;white-space:normal}}article{{break-inside:avoid}}}}
 </style></head><body><header><small>LOCAL TECHNICAL QUALITY CONTROL</small><h1>AUDIO DELIVERY QC INSPECTOR</h1>
-<p>Audio QC: {badge(report['audio_compliance'])} · Execution: <b>{esc(report['execution_status'])}</b> &nbsp; {esc(report['configuration']['preset'])} · {esc(report['scan_date'])} · v{esc(report['tool_version'])}</p>{timing_header}</header>
-<main><div class="cards">{cards}</div><p class="path">Source: {esc(report['source'])} · Elapsed: {report['elapsed_seconds']:.1f} s</p>
+<p>{compliance_label}: {badge(report['audio_compliance'])} · Execution: <b>{esc(report['execution_status'])}</b> &nbsp; {esc(report['configuration']['preset'])} · {esc(report['scan_date'])} · v{esc(report['tool_version'])}</p>{timing_header}</header>
+<main>{programme_notice}<div class="cards">{cards}</div><p class="path">Source: {esc(report['source'])} · Elapsed: {report['elapsed_seconds']:.1f} s</p>
 <h2>Especificación efectiva · {esc(report['configuration']['preset'])}</h2><div class="scroll"><table><tbody>{specification}</tbody></table></div>
 <p class="notice">{esc(report['defect_notice'])}</p>
 <p>Frame rate is a reporting setting. TC and File start TC are derived navigation labels, not timecode metadata embedded in the WAV. TC identifies the video frame containing the exact sample. Offset is file-relative (milliseconds). The authoritative sample index and full timestamp remain in Evidence and JSON. TC wraps at 24 hours; any extra days are shown separately.</p>
 <p>Defect issues group same-type channel events from one source within the configured start tolerance. Length, TC and method describe the earliest channel representative; Evidence retains every channel event and the full sample extent. One Evidence WAV preserves the original multichannel context.</p>
 <p>PASS: configured checks satisfied · WARNING: review required · FAIL: configured audio/technical rule violated · INCOMPLETE: required analysis could not finish; valid findings remain listed · INFO: observation. Execution and operational diagnostics are separate from compliance. Status counts describe files; defect issues count report rows. Group warnings also affect the overall status. “—” means unavailable.</p>
-<h2>Delivery overview</h2><div class="scroll"><table><thead><tr><th>Status</th><th>File / details</th><th>Duration (s)</th><th>Rate (Hz)</th><th>Bits</th><th>Ch</th><th>Layout</th><th>Peak (dBFS)</th><th>TP (dBTP)</th><th>I (LUFS)</th><th>LRA (LU)</th><th>BEXT</th><th>TimeReference</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+{programme_html(report)}
+<h2>Physical-file overview</h2><div class="scroll"><table><thead><tr><th>Status</th><th>File / details</th><th>Duration (s)</th><th>Rate (Hz)</th><th>Bits</th><th>Physical channels/file</th><th>Layout</th><th>Peak (dBFS)</th><th>TP (dBTP)</th><th>I (LUFS, file)</th><th>LRA (LU)</th><th>BEXT</th><th>TimeReference</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 <h2>Operational diagnostics</h2><ul>{operational or "<li>No scan-level operational diagnostics.</li>"}</ul><p>{esc(report["report_delivery"])}</p>
 <h2>Group consistency</h2><ul class="checks">{groups or '<li>No group inconsistencies detected.</li>'}</ul>
-{programme_html(report)}
 <h2>Physical file checks and forensic evidence</h2>{''.join(details) or '<p>No supported audio files found.</p>'}
 <h2>Configuration and provenance</h2><details><summary>Configuration used</summary><pre>{esc(json.dumps(report['configuration'], ensure_ascii=False, indent=2))}</pre></details>
 <details><summary>Measurement conventions and tools</summary><pre>{esc(json.dumps({'conventions': report['conventions'], 'dependencies': report['dependencies']}, indent=2))}</pre></details>

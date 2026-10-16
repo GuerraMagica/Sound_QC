@@ -23,6 +23,7 @@ class LoudnessParser:
         self.true_peak = None
         self.saw_summary = False
         self.invalid = set()
+        self.invalid_details = {}
         self.saw_peak = False
 
     def feed(self, line: str) -> None:
@@ -34,6 +35,7 @@ class LoudnessParser:
             key = match[1].upper()
             if not re.fullmatch(NUM, match[2], re.I):
                 self.invalid.add(key)
+                self.invalid_details.setdefault(key, f"{key}={match[2][:80]} at {self.frame_time:g} s")
                 self.values.pop(key, None)
                 return
             value = float(match[2])
@@ -42,6 +44,7 @@ class LoudnessParser:
             elif not math.isfinite(value):
                 self.values.pop(key, None)
                 self.invalid.add(key)
+                self.invalid_details.setdefault(key, f"{key}={match[2][:80]} at {self.frame_time:g} s")
             else:
                 self.values[key] = value
                 if key == "M" and self.frame_time >= 0.299999 and value > -119:
@@ -79,7 +82,7 @@ class LoudnessParser:
         if duration < 0.4 or integrated is None or integrated <= -69.999:
             integrated = None  # -70 is FFmpeg's no-gated-programme sentinel
         outcomes = {}
-        if self.invalid & {"I", "M", "S", "LRA"} or (duration >= 0.4 and "I" not in self.values):
+        if "I" in self.invalid or (duration >= 0.4 and "I" not in self.values):
             integrated = None
             outcomes["integrated_lufs"] = MeasurementOutcome(MS.ERROR, "Invalid or missing EBU R128 loudness metadata")
         else:
@@ -93,12 +96,27 @@ class LoudnessParser:
             outcomes["true_peak_dbtp"] = MeasurementOutcome(
                 MS.SUCCESS if self.true_peak is not None else MS.UNAVAILABLE,
                 None if self.true_peak is not None else "True Peak is negative infinity (digital silence)")
+        # FFmpeg can emit a non-finite momentary/short-term window while its
+        # independent integrated result and LRA remain valid. Do not promote an
+        # auxiliary metric error to an integrated measurement failure, and do
+        # not certify a maximum from a stream containing invalid windows.
+        auxiliary = {}
+        for key, metric, value in (("LRA", "lra_lu", self.values.get("LRA") if integrated is not None and duration >= 3 else None),
+                                   ("M", "max_momentary_lufs", self.max_m if duration >= 0.4 else None),
+                                   ("S", "max_short_term_lufs", self.max_s if duration >= 3 else None)):
+            if key in self.invalid or outcomes["integrated_lufs"].state == MS.ERROR:
+                value = None
+                reason = ("Invalid EBU R128 metadata: " + self.invalid_details[key] if key in self.invalid
+                          else "Integrated measurement failed; related loudness statistics not certified")
+                outcomes[metric] = MeasurementOutcome(MS.ERROR, reason)
+            else:
+                outcomes[metric] = MeasurementOutcome(MS.SUCCESS if value is not None else MS.UNAVAILABLE,
+                    None if value is not None else "No eligible window / short programme / below gate")
+            auxiliary[metric] = value
         return {
             "measurement_outcomes": outcomes,
             "integrated_lufs": integrated,
-            "lra_lu": self.values.get("LRA") if integrated is not None and duration >= 3 else None,
-            "max_momentary_lufs": self.max_m if duration >= 0.4 and outcomes["integrated_lufs"].state != MS.ERROR else None,
-            "max_short_term_lufs": self.max_s if duration >= 3 and outcomes["integrated_lufs"].state != MS.ERROR else None,
+            **auxiliary,
             "true_peak_dbtp": self.true_peak,
             "true_peak_resolution_db": 0.1,
             "loudness_method": "FFmpeg ebur128; native channel layout; dualmono=false; 100 ms updates",
@@ -106,6 +124,11 @@ class LoudnessParser:
 
 
 def measure_loudness(path, audio, timeout=None, progress=None) -> dict:
+    if audio.measurements.get("nonfinite_samples", 0):
+        reason = "Decoded audio contains non-finite samples; EBU R128 measurements cannot be certified"
+        metrics = ("integrated_lufs", "true_peak_dbtp", "lra_lu", "max_momentary_lufs", "max_short_term_lufs")
+        return {**dict.fromkeys(metrics), "loudness_unavailable": reason,
+                "measurement_outcomes": {k: MeasurementOutcome(MS.ERROR, reason) for k in metrics}}
     layout = audio.channel_layout
     if not layout and audio.channels in (1, 2):
         layout = "mono" if audio.channels == 1 else "stereo"

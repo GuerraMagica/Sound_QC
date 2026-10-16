@@ -309,6 +309,7 @@ def _group_issues(definition, audios, rate, tolerance, limit):
                 event = _cluster(original, rate)
                 events.append({"logical_channel": member.channel, "source_path": member.file,
                                "physical_channel": event.channel, "file_issue_index": file_issue_index,
+                               "file_issue_severity": issue.severity,
                                "group_sample_index": event.sample_index,
                                "group_first_sample": event.cluster_first_sample,
                                "group_last_sample": event.cluster_last_sample,
@@ -335,6 +336,10 @@ def _group_issues(definition, audios, rate, tolerance, limit):
         issue["channels"].sort(key=ROLES.index)
         issue["channel_events"].append(event)
         issue["cluster_last_sample"] = max(issue["cluster_last_sample"], event["group_last_sample"])
-        issue["severity"] = highest_severity(e["source_event"]["severity"] for e in issue["channel_events"])
+        # Policy classifies the file issue; its forensic channel events can
+        # remain unclassified. Carry that existing assessment without changing
+        # source events or inventing a classification during measurement.
+        issue["severity"] = highest_severity(s for e in issue["channel_events"]
+                                             for s in (e["source_event"]["severity"], e["file_issue_severity"]))
         issue["merged_candidate_count"] = sum(e["source_event"]["merged_candidate_count"] for e in issue["channel_events"])
     return issues, capped

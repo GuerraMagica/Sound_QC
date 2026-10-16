@@ -180,3 +180,43 @@ source. It runs real CLI scans with/without grouping, asserts identical complete
 file-level results, verifies source SHA-256/size/mtime and writes `acceptance.json`
 plus HTML/JSON/CSV and per-source snippets. GUI tests use offscreen Qt and real CLI
 workers. M6 combined measurements are not implemented.
+
+## Real-source follow-up: compliance scope and operator review
+
+Reports explicitly separate `compliance_scope: PHYSICAL_FILES` from
+`programme_compliance: NOT_EVALUATED` (also recorded on each programme group).
+Existing file-level statuses, configured comparisons and CLI exit codes are
+preserved. In particular, comparing a mono C or LFE Integrated LUFS value with a
+configured file target is a **physical-channel diagnostic**, not evidence that the
+assembled 5.1 programme fails that target. M5 cannot certify programme loudness.
+Do not interpret structural `VALID` as a delivery PASS.
+
+HTML presents programme issues in collapsed category tables, with counts of
+**retained** issues and a prominent coverage notice. The original technical rows,
+source evidence actions and exact forensic data remain accessible. JSON adds an
+`issue_summary` with retained total, category/severity counts and coverage; these
+are not extrapolated totals when the cap has been reached.
+
+Two issues can share both a timecode and almost identical strongest representative
+samples while their **cluster starts** differ by more than 1 ms. For example,
+starts 4800077 and 4800187 at 48 kHz differ by 110 samples (2.2916667 ms). They
+remain separate even if their representatives are 4800188 and 4800187. Neither
+interval overlap nor a common TC changes the canonical grouping rule.
+
+The GUI now states the effective True Peak maximum, including when a displayed
+inactive value is ignored, and records the scan snapshot's maximum in the progress
+log. `Canales físicos permitidos` means channels **inside each file**: normally 1
+for each multiple-mono member, or 6 for a single interleaved 5.1 file. Logical L/R/C/
+LFE/Ls/Rs roles are assigned and validated separately by Programme Groups.
+
+A non-finite FFmpeg M/S/LRA observation is now an error of that auxiliary metric,
+not automatically an error of a separately valid Integrated LUFS result. A maximum
+with missing/invalid windows is left null, marked ERROR and reported operationally;
+no numerical value is invented. Integrated/True Peak failures still retain the
+hotfix's mandatory-error behaviour. Known non-finite **source samples** prevent
+certification of EBU R128 measurements and remain a genuine source QC failure.
+
+Group events retain `file_issue_severity` alongside the unchanged source channel
+event. This carries an already assessed file issue into the group view when its
+measurement-side channel event remains unclassified. Highest constituent severity
+is preserved; fully unclassified measurement input remains unclassified.

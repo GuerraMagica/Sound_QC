@@ -367,6 +367,10 @@ class QCWindow(QMainWindow):
             return
         self.report_path = output / "QC_REPORT.html"
         self.log.clear()
+        maximum = self._scan_config["true_peak"]["maximum"]
+        self.log.appendPlainText("Scan configuration snapshot · True Peak: " +
+                                 (f"maximum {maximum:g} dBTP" if maximum is not None else "no configured maximum") +
+                                 f" · physical channels/file: {self._scan_config['channels']['allowed'] or 'unrestricted'}")
         self.settings.setEnabled(False)
         self.run_button.setEnabled(False)
         self.open_button.setEnabled(False)

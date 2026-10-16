@@ -125,6 +125,10 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
                         audio.measurement_outcomes[metric] = outcome
                     if outcome.state == MS.ERROR:
                         audio.operational(metric, outcome.reason, required=True, affects_analysis=True)
+            for metric in ("lra_lu", "max_momentary_lufs", "max_short_term_lufs"):
+                outcome = audio.measurement_outcomes.get(metric)
+                if outcome is not None and outcome.state == MS.ERROR:
+                    audio.operational(metric, outcome.reason)
     except Exception as exc:
         audio.operational("inspection", str(exc), required=True, affects_analysis=True)
     if requirements.hash:

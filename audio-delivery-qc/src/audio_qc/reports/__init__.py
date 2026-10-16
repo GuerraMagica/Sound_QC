@@ -25,6 +25,8 @@ def build_report(source, files, group_checks, config, versions, elapsed, operati
         "programme_groups": programme_timecodes(programme_groups, config["timecode"]),
         "programme_group_configuration": deepcopy(programme_settings),
         "audio_compliance": compliance.value,
+        "compliance_scope": "PHYSICAL_FILES",
+        "programme_compliance": "NOT_EVALUATED" if programme_groups else None,
         "execution_status": execution_status(diagnostics, any("decoded_sample_frames" in a.measurements for a in files), compliance == Status.INCOMPLETE).value,
         "operational_diagnostics": [asdict(d) for d in operational_diagnostics],
         "report_delivery": "Confirm all deliverables with QC_COMPLETE.json; without that marker this report set is incomplete",
