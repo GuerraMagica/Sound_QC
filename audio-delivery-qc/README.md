@@ -1,5 +1,12 @@
 # AUDIO DELIVERY QC INSPECTOR
 
+**Estado vigente y continuidad:** consulta [PROJECT_STATE.md](PROJECT_STATE.md)
+para la baseline M5 aceptada, arquitectura, limitaciones y próximos hitos pendientes
+de aprobación. Los documentos `*_VALIDATION.md`, auditorías y el seguimiento M5
+son registros históricos; sus pruebas no se consideran reejecutadas al actualizar
+documentación. Las referencias de este README a M3.1 y al hotfix describen el
+alcance de esas etapas; la sección M5 recoge la extensión multiple-mono posterior.
+
 A local, read-only technical inspector for film and TV audio deliveries: Full Mix, M&E, DIA, FX, MX, stems and printmasters. It scans a folder recursively, or one file, and creates **QC_REPORT.html**, **QC_REPORT.csv**, and **QC_REPORT.json**, plus a candidate-level **QC_DEFECTS.csv**, in a new, separate report folder.
 
 **Sources stay untouched.** The application does not normalize, repair, rename, move, rewrite headers, change metadata or deliberately change source timestamps. Sources are opened for reading. There are no network clients, telemetry, uploads, cloud processing, AI APIs or automatic crash-report uploads. FFmpeg input protocols are restricted to local files/pipes. No internet is needed after installation.
@@ -9,10 +16,10 @@ A local, read-only technical inspector for film and TV audio deliveries: Full Mi
 The application and isolated Python environment are already installed. FFmpeg and ffprobe are available. Choose either workflow:
 
 1. Double-click **Open QC GUI.command** in Finder. Select a file/folder, QC preset, **Frame Rate** and TC source, then Run QC. Use Open Report when finished. This is a local desktop window with no server or network processing. **Run QC.command** retains the original Terminal workflow.
-2. Or paste these commands in Terminal and replace the example audio path:
+2. Or paste these commands in Terminal and replace the example project and audio paths:
 
 ```sh
-cd "/Users/juliomartinrodriguez/Documents/ChatGPT/XQC/audio-delivery-qc"
+cd "/path/to/XQC/audio-delivery-qc"
 source .venv/bin/activate
 audio-qc inspect "/path/to/your/audio folder"
 ```
