@@ -179,3 +179,27 @@ Resultados en `acceptance.json`; reporte 5.1:
 `/tmp/xqc-m6-acceptance-20261019-reviewed/report-surround/QC_REPORT.html`.
 La memoria ya se midió en el destino `...-a --memory`; las correcciones posteriores
 no cambian el grafo virtual ni retención de muestras. No se repitió esa medición.
+
+## Publicación y compatibilidad Linux
+
+El usuario autorizó posteriormente commit y push de la rama M6. La primera
+publicación fue `debd7f43e2e6a2ae52bdda544c3da68b4ba417ef`.
+El [run 39305664408](https://github.com/GuerraMagica/Sound_QC/actions/runs/39305664408)
+pasó la auditoría de dependencias, pero falló en ambas versiones de Python:
+22 fallos y 668 pruebas correctas en cada job. FFmpeg 6.1.1 de Ubuntu rechazó
+la negociación de layout entre la conversión interna y `join`:
+`Unknown channel layouts not supported`.
+
+Corrección acotada: declarar también `channel_layouts=mono` en `aformat` para
+cada entrada previamente validada como mono. Se mantienen el mapa por rol,
+los valores PCM, el número exacto de muestras y los umbrales. Las pruebas
+existentes de equivalencia PCM, colas, formatos mixtos y medición virtual
+detectaron el problema en Linux; no se omiten ni relajan sus aserciones.
+La selección focalizada local pasó 27 pruebas. El resultado de CI del commit
+corregido debe verificarse independientemente; el primer run no acredita éxito.
+
+Validación local de esta corrección: `QT_QPA_PLATFORM=offscreen .venv/bin/python
+-m pytest -q`, 690 passed en 40,37 s, sin fallos ni omisiones. El runner
+`python scripts/verify_m6.py --output /tmp/xqc-m6-linux-fix-20261020` terminó
+con exit 0: diferencias de I/LRA/TP de 0,0 para stereo y 5.1 e integridad de
+fuentes confirmada. Entorno: macOS ARM64, Python 3.14.8, FFmpeg 9.0.2.

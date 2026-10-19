@@ -126,7 +126,8 @@ def virtual_input_args(inputs):
     for i, role in enumerate(roles):
         args += ['-protocol_whitelist', 'file,pipe', '-guess_layout_max', '0', '-channel_layout', 'mono', '-i', str(mapping[role])]
         # Double precision preserves integer and floating PCM values, also for mixed bit depths.
-        filters.append(f'[{i}:a:0]aformat=sample_fmts=dbl,asetnsamples=n=1024:p=0[m{i}]')
+        # FFmpeg 6 needs the validated mono layout during filter negotiation too.
+        filters.append(f'[{i}:a:0]aformat=sample_fmts=dbl:channel_layouts=mono,asetnsamples=n=1024:p=0[m{i}]')
     labels = ''.join(f'[m{i}]' for i in range(len(roles)))
     assignments = '|'.join(f'{i}.0-{channel}' for i, channel in enumerate(CHANNEL_MAP[inputs.layout]))
     layout = 'stereo' if inputs.layout == 'stereo' else '5.1(side)'
