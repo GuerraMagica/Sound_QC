@@ -25,7 +25,7 @@ def test_effective_custom_report_preserves_schema_timecode_issues_and_links(tmp_
     assessed.defects[0].snippet='defect_snippets/a & 日本語.wav'
     write_reports(build_report('/not/read.wav',[assessed],[],policy,{},0),tmp_path)
     report=json.loads((tmp_path/'QC_REPORT.json').read_text())
-    assert report['schema_version']==4 and report['configuration']==policy
+    assert report['schema_version']==5 and report['configuration']==policy
     issue,=report['files'][0]['defects']
     assert issue['channels']==[1,2] and len(issue['channel_events'])==2
     assert issue['sample_index']==2529767 and issue['timestamp_seconds'].hex()==events[0].timestamp_seconds.hex()

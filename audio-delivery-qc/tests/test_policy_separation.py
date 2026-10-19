@@ -57,7 +57,7 @@ def test_plan_contains_only_execution_inputs_and_independent_options(config):
     plan = measurement_requirements(config)
     assert set(plan.defect_options) == {'max_candidates','issues','clicks','dropouts'}
     assert 'fail_zero_run_ms' not in plan.defect_options['dropouts']
-    assert set(asdict(plan)) == {'loudness','true_peak','defect_options','hash','timeout_seconds'}
+    assert set(asdict(plan)) == {'loudness','true_peak','defect_options','hash','timeout_seconds','levels_required'}
     assert plan.timeout_seconds == 123
     before = deepcopy(config)
     plan.defect_options['clicks']['merge_gap_ms'] = 0

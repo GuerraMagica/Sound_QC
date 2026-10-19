@@ -147,6 +147,10 @@ class QCWindow(QMainWindow):
         self.open_button.clicked.connect(self.open_report)
         actions.addWidget(self.run_button)
         actions.addWidget(self.open_button)
+        self.cancel_button = QPushButton('Cancelar QC')
+        self.cancel_button.setEnabled(False)
+        self.cancel_button.clicked.connect(self.cancel_qc)
+        actions.addWidget(self.cancel_button)
         actions.addStretch()
         layout.addLayout(actions)
         self.progress = QProgressBar()
@@ -337,7 +341,7 @@ class QCWindow(QMainWindow):
             group_snapshot.chmod(0o400)
         self._scan_config = deepcopy(config)
         timing = config["timecode"]
-        args = ["inspect", self.source.text(), "--verbose", "--preset", config["preset"], "--config", str(snapshot),
+        args = ["inspect", self.source.text(), "--verbose", "--gui-control-stdin", "--preset", config["preset"], "--config", str(snapshot),
                 "--frame-rate", timing["frame_rate"], "--timecode-source", timing["source"],
                 "--output", str(output)]
         if group_snapshot is not None:
@@ -377,7 +381,17 @@ class QCWindow(QMainWindow):
         self.progress.setRange(0, 0)
         self.status.setText("Scanning… Source files are read-only.")
         self._running = True
+        self._cancelling = False
+        self.cancel_button.setEnabled(True)
         self.process.start(sys.executable, ["-u", "-m", "audio_qc", *args])
+
+    def cancel_qc(self):
+        if not self._running or getattr(self, '_cancelling', False):
+            return
+        self._cancelling = True
+        self.cancel_button.setEnabled(False)
+        self.status.setText('Cancelando QC… Esperando a que termine el proceso de audio.')
+        self.process.write(b'CANCEL\n')
 
     def read_progress(self):
         text = bytes(self.process.readAllStandardOutput()).decode("utf-8", errors="replace")
@@ -389,6 +403,7 @@ class QCWindow(QMainWindow):
 
     def scan_finished(self, code, *_):
         self.read_progress()
+        self.cancel_button.setEnabled(False)
         self._running = False
         self._clear_snapshot()
         self.settings.setEnabled(True)
@@ -402,14 +417,25 @@ class QCWindow(QMainWindow):
                 report = json.loads(self.report_path.with_suffix(".json").read_text(encoding="utf-8"))
                 groups = report.get("programme_groups", [])
                 if groups:
-                    self.group_preview.setText("\n".join(
-                        f'{g["name"]}: {g["validation_status"]} · ' + ", ".join(m["channel"] for m in g["members"]) +
-                        f' · {len(g["issues"])} issues · {g["defect_coverage"]}\n' +
-                        "; ".join(r["message"] for r in g["reasons"] + g["warnings"]) for g in groups))
+                    summaries = []
+                    for g in groups:
+                        measurement = g.get('programme_measurement', {})
+                        values = measurement.get('measurements', {})
+                        levels = ' · '.join(f'{label}: {values.get(key) if values.get(key) is not None else "—"}'
+                                            for label, key in (('I LUFS', 'integrated_lufs'), ('LRA LU', 'lra_lu'), ('TP dBTP', 'true_peak_dbtp')))
+                        diagnostics = [d['message'] for d in measurement.get('operational_diagnostics', [])]
+                        summaries.append(f'{g["name"]}: {g["validation_status"]} · ' + ", ".join(m["channel"] for m in g["members"]) +
+                            f' · Niveles: {g.get("programme_compliance", "NOT_EVALUATED")} · {measurement.get("state", "NOT_EVALUATED")}\n' +
+                            levels + f' · {len(g["issues"])} issues · {g["defect_coverage"]}\n' +
+                            "; ".join([r["message"] for r in g["reasons"] + g["warnings"]] + diagnostics))
+                    self.group_preview.setText("\n".join(summaries))
             except (OSError, ValueError, KeyError):
                 self.group_preview.setText("Programme details unavailable; inspect the report.")
         self.status.setText(("Partial execution; review operational diagnostics. " if code == 2 else "Completed with QC failures. " if code == 1 else "Completed. ") + str(self.report_path)
                             if completed else "Scan could not complete. See the progress log for details.")
+
+        if code == 130:
+            self.status.setText('Cancelado. Fuentes intactas; los resultados parciales no son un informe completo.')
 
     def process_error(self, _):
         self.log.appendPlainText(self.process.errorString())

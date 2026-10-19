@@ -1,6 +1,6 @@
 # XQC — estado vigente
 
-Actualización documental: **18 de octubre de 2026**. Este documento sintetiza la
+Actualización documental: **19 de octubre de 2026**. Este documento sintetiza la
 baseline observada y las decisiones del usuario; no es una nueva certificación QC.
 
 ## 1. Identificación del proyecto
@@ -15,7 +15,7 @@ cine y televisión sin modificar las fuentes. Véase [README](README.md).
 - Baseline verificada en Git e identificada por el tag anotado `m5-accepted`,
   creado y publicado en `origin` el 18 de octubre de 2026.
 - Versión declarada: `1.0.0` en [pyproject.toml](pyproject.toml) y
-  [audio_qc](src/audio_qc/__init__.py); informes JSON schema **4**.
+  [audio_qc](src/audio_qc/__init__.py); informes nuevos JSON schema **5** en la rama M6; baseline M5 schema **4**.
 - Congelar M5 antes de M6 es una decisión del usuario. El tag identifica la baseline
   aceptada; los commits documentales posteriores no cambian esa referencia.
 
@@ -70,17 +70,19 @@ auditoría de dependencias en el [run 38981882091](https://github.com/GuerraMagi
 del commit aceptado. **No consultado de nuevo en esta tarea**; no se afirma estado
 remoto actual. GUI offscreen no equivale a validación manual en Pro Tools/Resolve.
 
-**Actual:** inspección estática de código, configuración y documentos; comprobación
-local de baseline/Git y validación documental de rutas, alcance y diff. La
-publicación documental incluye verificación de referencias Git remotas; no se han
-ejecutado tests locales de aplicación ni procesamiento local de audio, ni se ha
-revalidado la CI histórica.
+**Actual (M6):** implementación en `codex/m6-programme-measurement`, con
+commit y push de esta rama autorizados por el usuario. Diseño y plan aprobados. Mediciones
+virtuales stereo/5.1, scope de política, schema 5 y cancelación GUI/CLI implementados;
+[registro M6](docs/M6_VALIDATION.md) distingue pruebas ejecutadas y aceptación
+pendiente. CI remota, Linux y validación profesional no revalidados.
 
 ## 6. Limitaciones conocidas
 
-- M5 **no mide Integrated LUFS, LRA ni True Peak del programa combinado**. Los
-  resultados mono son diagnósticos físicos, no loudness del 5.1; programme compliance
-  permanece `NOT_EVALUATED`. `VALID` solo expresa validez estructural/alineación.
+- La baseline M5 no mide niveles combinados. M6 los mide solo en grupos elegibles;
+  un grupo M5 VALID puede ser inelegible para M6 por timing insuficiente.
+  `VALID` continúa expresando validez estructural, no cumplimiento. En M6, mono
+  es diagnóstico y los targets se evalúan sobre el programa. Aceptación profesional
+  y Linux pendientes; no confundir implementación local con release aceptada.
 - Los caps pueden dejar cobertura `INCOMPLETE`. El caso real retuvo 1.957 issues de
   archivo y 1.000 de grupo (995 clicks/ticks y 5 dropouts); no son un total global
   de defectos únicos ni una inspección completa. No ocultar avisos de truncamiento.
@@ -102,7 +104,8 @@ revalidado la CI histórica.
 
 Resultado **histórico** del seguimiento M5: **137 focalizadas y 627 completas**,
 cero fallos y cero omitidas; Python 3.14.8, macOS 26.5.2 ARM64, FFmpeg 9.0.2.
-El hotfix documenta aceptación operativa A–F. No se repitió ninguna en esta tarea.
+El hotfix documenta aceptación operativa A–F. Estos resultados M5 son históricos;
+las comprobaciones nuevas se registran separadamente en M6_VALIDATION.
 
 Para futuras tareas con ejecución autorizada, desde `audio-delivery-qc/`:
 
@@ -130,7 +133,8 @@ dependencias. Su definición no demuestra por sí sola una ejecución satisfacto
 - Agrupar por tipo/canal e inicio de cluster dentro de la ventana fija del primer
   inicio (1 ms por defecto), sin chaining cross-channel ni criterio de overlap solo.
 - Preservar fuentes, orden de canales, precisión, provenance y límites de memoria.
-  Mantener schema 4 y compatibilidad de CSV; cambios requieren evaluación explícita.
+  La migración a schema 5 fue aprobada con el diseño M6; conservar columnas CSV
+  y provenance. Los reportes históricos schema 4 permanecen intactos.
 - Separar SUCCESS/UNAVAILABLE/ERROR, ejecución y cumplimiento acústico. El marcador
   `QC_COMPLETE.json` confirma entrega del reporte, no un PASS del audio.
 
@@ -141,7 +145,7 @@ dependencias. Su definición no demuestra por sí sola una ejecución satisfacto
 | M5 y seguimiento de fiabilidad | Implementado y aceptado por el usuario; validaciones históricas arriba |
 | Documentación V1.0 | Implementada en AGENTS, PROJECT_STATE y enlace README; sin cambios funcionales |
 | Tag de baseline M5 | `m5-accepted`: anotado, creado y publicado sobre el commit aceptado |
-| M6: medición multicanal virtual | Siguiente milestone previsto; NO INICIADO, no implementado ni autorizado por esta tarea |
+| M6: medición multicanal virtual | Implementación local autorizada y en validación; aceptación/release pendientes; ver registro M6 |
 | M7: clicks/ticks | Posterior a M6; mejorar precisión/reducir falsos positivos sin perder defectos reales; no implementado ni autorizado |
 | M8: UX/reportes/manual | Posterior a M7; simplificación para facility, no implementado ni autorizado |
 
@@ -149,15 +153,15 @@ M6 prevé medir LUFS/LRA/dBTP de WAV mono sincronizados sin generar masters
 interleaved completos, contrastando con un interleaved de referencia dentro de
 tolerancias verificadas. Su aceptación futura requiere pruebas automatizadas,
 regresión, integridad, validación profesional y aprobación expresa del usuario.
-El usuario declara una **especificación externa preparada**, pendiente de incorporar
-o referenciar formalmente: no se ha localizado como especificación M6 en los
-documentos del repositorio inspeccionados; no se inventa una ruta ni se incorpora.
+La especificación aportada dio lugar al [diseño M6 aprobado](docs/M6_DESIGN.md)
+y al [plan aprobado](docs/superpowers/plans/2026-10-19-m6-programme-measurement.md).
 
 ## 10. Próximo objetivo aprobado
 
-**Pendiente de definición y aprobación del usuario** para el siguiente desarrollo
-funcional. M6 es el siguiente milestone previsto y todavía no está implementado.
-El ajuste documental V1.0 no autoriza ningún desarrollo funcional nuevo.
+**Publicar la rama M6 validada localmente y comprobar su CI en GitHub**,
+sin avanzar M7/M8. El usuario autorizó commit y push de esta rama; no merge a main,
+tags ni publicación de material de producción. La aceptación requiere
+revisar las limitaciones y pruebas pendientes del registro M6.
 
 ## 11. Referencias documentales
 

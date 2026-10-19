@@ -1,4 +1,8 @@
 import argparse
+import os
+from threading import Thread
+from dataclasses import asdict
+from copy import deepcopy
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -9,12 +13,14 @@ from . import __version__
 from .config import ConfigError, PRESETS, load_config
 from .consistency import group_checks
 from .diagnostics import RunLog
-from .models import AudioFile, Check, Status, OperationalDiagnostic
-from .process import ToolError, check_tools
+from .models import AudioFile, Check, Status, OperationalDiagnostic, overall_status
+from .process import ToolError, check_tools, CancellationToken
 from .reports import build_report, write_reports, write_recovery
 from .scanner import discover, inspect_file
 from .snippets import export_snippets
 from .timecode import SOURCES
+from .rules import measurement_requirements, assess_programme
+from .programme_measurement import (programme_eligibility, measure_programme, ProgrammeMeasurement, source_signature)
 from .programme import load_group_settings, default_group_settings, discover_programmes, build_programmes
 
 
@@ -33,6 +39,7 @@ def parser():
     inspect.add_argument("--frame-rate", help='Reporting fps: 23.976, 24, 25, "29.97 NDF", "29.97 DF", 30')
     inspect.add_argument("--timecode-source", choices=SOURCES, type=str.upper, help="AUTO (default), FILE_RELATIVE or MANUAL")
     inspect.add_argument("--start-timecode", help="Manual start HH:MM:SS:FF (semicolon for DF); implies MANUAL unless source is explicitly set")
+    inspect.add_argument("--gui-control-stdin", action="store_true", help=argparse.SUPPRESS)
     inspect.add_argument("--output", type=Path, help="New report directory, outside a scanned source folder")
     inspect.add_argument("--hash", action="store_true", help="SHA-256 of files and decoded audio (default off)")
     toggle = inspect.add_mutually_exclusive_group()
@@ -69,6 +76,35 @@ def main(argv=None):
     log = logs.logger
     output = None
     report = None
+    files = []
+    programmes = []
+    definitions = ()
+    programme_settings = None
+    checks = []
+    cancel = CancellationToken() if getattr(args, 'gui_control_stdin', False) else None
+    cancellation = {'cancel': cancel} if cancel else {}
+    if cancel:
+        def control():
+            # Raw bounded reads avoid a daemon holding Python stdin's buffered lock at shutdown.
+            pending = b''
+            dropping = False
+            while True:
+                try:
+                    data = os.read(sys.stdin.fileno(), 64)
+                except OSError:
+                    return
+                if not data:
+                    return
+                for byte in data:
+                    if byte == 10:
+                        if not dropping and pending == b'CANCEL':
+                            cancel.cancel()
+                        pending, dropping = b'', False
+                    elif len(pending) < 32 and not dropping:
+                        pending += bytes([byte])
+                    else:
+                        dropping = True
+        Thread(target=control, daemon=True).start()
 
     def recover(error):
         if report is not None and output is not None:
@@ -77,6 +113,36 @@ def main(argv=None):
                 log.error("Available analysis saved as recovery data: %s", output / "QC_RECOVERY.json")
             except Exception:
                 logs.console_warning("Recovery data could not be saved; report delivery failed.")
+
+    def cancelled(error=None):
+        if cancel:
+            cancel.cancel()
+        if output is not None and (files or report is not None):
+            try:
+                if report is not None:
+                    partial = deepcopy(report)
+                else:
+                    available_groups = deepcopy(programmes) if programmes else build_programmes(
+                        definitions, files, detection_enabled=False,
+                        cross_channel_merge_ms=config['defects']['issues']['cross_channel_merge_ms'],
+                        max_issues=config['defects']['max_candidates'])
+                    for group in available_groups:
+                        if 'programme_measurement' not in group:
+                            group.update(programme_measurement=asdict(ProgrammeMeasurement('NOT_EVALUATED')),
+                                programme_compliance='NOT_EVALUATED',
+                                level_checks=[asdict(Check('programme_cancelled', Status.INCOMPLETE,
+                                                          'Programme measurement not completed: scan cancelled'))])
+                    partial = build_report(source, files, checks, config, versions, time.monotonic()-started,
+                        [OperationalDiagnostic('cancelled', 'Scan cancelled; partial analysis only', True, True)],
+                        available_groups, programme_settings)
+                if error is not None:
+                    partial['operational_diagnostics'].append(asdict(OperationalDiagnostic(
+                        'concurrent_operation_error', str(error), True)))
+                write_recovery(partial, output, 'Scan cancelled; partial results only', diagnostic_code='cancelled')
+            except Exception:
+                logs.console_warning('Cancelled scan recovery could not be saved.')
+        log.warning('audio-qc: Scan cancelled; source files were opened read-only. Partial evidence may remain in the new report folder.')
+        return 130
 
     try:
         if args.command == "gui":
@@ -128,7 +194,11 @@ def main(argv=None):
                   __version__, len(paths), config["preset"], output)
         if not paths:
             notices.append(Check("empty_scan", Status.WARNING, "No supported audio files found in the source folder"))
+        member_paths = {m.file for g in definitions for m in g.members}
+        signatures = {}
         for i, path in enumerate(paths, 1):
+            if cancel:
+                cancel.raise_if_cancelled()
             last = [0.0, ""]
 
             def progress(phase, fraction):
@@ -140,7 +210,12 @@ def main(argv=None):
 
             audio = None
             try:
-                audio = inspect_file(path, config, args.hash, progress)
+                try:
+                    signatures[str(path)] = source_signature(path)
+                except OSError:
+                    pass  # Inspection records the actual unreadable-source diagnostic.
+                scope = {"level_scope": "PROGRAMME_MEMBER"} if str(path) in member_paths else {}
+                audio = inspect_file(path, config, args.hash, progress, **scope, **cancellation)
             except Exception as exc:
                 # Unexpected errors remain visible but cannot abort the delivery.
                 log.error("Unexpected inspection error for %s", path, exc_info=True)
@@ -148,14 +223,14 @@ def main(argv=None):
                     audio = AudioFile(str(path), path.name)
                 audio.operational("unexpected_inspection_error", f"{type(exc).__name__}: {exc}",
                                   required=True, affects_analysis=True)
+            files.append(audio)  # Preserve completed facts even if evidence export is cancelled.
             if args.export_defect_snippets:
                 try:
                     progress("Exporting evidence", 0)
-                    export_snippets(audio, output, config, i)
+                    export_snippets(audio, output, config, i, **cancellation)
                 except Exception as exc:
                     log.error("Evidence export failed for %s", path, exc_info=True)
                     audio.operational("snippet_export", f"{type(exc).__name__}: {exc}", required=True)
-            files.append(audio)
             log.debug("[%s/%s] %s · %s", i, len(paths), audio.status, path.name)
             for check in audio.checks:
                 log.debug("%s · %s · %s · %s", path.name, check.status, check.code, check.message)
@@ -171,7 +246,36 @@ def main(argv=None):
         programmes = build_programmes(definitions, files, detection_enabled=config["defects"]["enabled"],
                                       cross_channel_merge_ms=config["defects"]["issues"]["cross_channel_merge_ms"],
                                       max_issues=config["defects"]["max_candidates"])
+        requirements = measurement_requirements(config)
         for group in programmes:
+            if cancel:
+                cancel.raise_if_cancelled()
+            eligibility = programme_eligibility(group, files, signatures)
+            if not requirements.ebur128:
+                measured = ProgrammeMeasurement('DISABLED')
+            elif not eligibility.eligible:
+                measured = ProgrammeMeasurement('NOT_EVALUATED', operational_diagnostics=[
+                    OperationalDiagnostic('programme_eligibility', reason, True, True) for reason in eligibility.reasons])
+            else:
+                log.debug('Programme %s · virtual multichannel EBU R128 · %s', group['name'], eligibility.input.ordered_members)
+                last_programme_progress = [0.0]
+                def programme_progress(fraction):
+                    now = time.monotonic()
+                    if now - last_programme_progress[0] >= 2:
+                        log.debug('Programme %s · EBU R128 · %.0f%%', group['name'], max(0, min(100, fraction*100)))
+                        last_programme_progress[0] = now
+                measured = measure_programme(eligibility.input, requirements, programme_progress, **cancellation)
+            level_checks = assess_programme(measured, config)
+            group.update(programme_measurement=asdict(measured), level_checks=[asdict(c) for c in level_checks],
+                         measurement_eligibility={'eligible': eligibility.eligible, 'reasons': eligibility.reasons,
+                                                  'warnings': eligibility.warnings},
+                         programme_compliance=('NOT_EVALUATED' if measured.state in ('NOT_EVALUATED', 'DISABLED')
+                                               else overall_status(level_checks).value),
+                         level_scope='PROGRAMME', level_policy=deepcopy({k: config[k] for k in ('loudness', 'true_peak')}),
+                         combined_programme_loudness=measured.state, combined_true_peak=measured.state)
+            for diagnostic in measured.operational_diagnostics:
+                (log.error if diagnostic.required else log.warning)('Programme %s · %s', group['name'], diagnostic.message)
+            log.info('Programme %s · Levels %s · %s', group['name'], group['programme_compliance'], measured.state)
             log.info("Programme %s · %s · %s · Channels: %s", group["name"], group["validation_status"],
                      group["alignment_mode"], ", ".join(m["channel"] for m in group["members"]))
             for reason in group["reasons"] + group["warnings"]:
@@ -181,9 +285,11 @@ def main(argv=None):
         diagnostics.extend(OperationalDiagnostic("diagnostic_log", message) for message in logs.warnings())
         report = build_report(source, files, checks, config, versions, time.monotonic()-started, diagnostics,
                               programmes, programme_settings)
-        write_reports(report, output)
+        if cancel:
+            cancel.raise_if_cancelled()
+        write_reports(report, output, **cancellation)
         if programmes:
-            log.info("Programme compliance: NOT_EVALUATED in M5. The following Audio QC status covers physical-file diagnostics only.")
+            log.info("Programme compliance: %s. Mono levels are diagnostic; physical technical checks remain active.", report["programme_compliance"])
         log.info("Execution %s · Audio QC %s · %s files · %s PASS · %s WARNING · %s FAIL", report["execution_status"], report["status"], len(files),
                  report["summary"]["PASS"], report["summary"]["WARNING"], report["summary"]["FAIL"])
         log.info("HTML report: %s", output / "QC_REPORT.html")
@@ -191,14 +297,17 @@ def main(argv=None):
             return 2
         return 1 if report["status"] == "FAIL" else 0
     except (ConfigError, ToolError, ValueError, OSError) as exc:
+        if cancel and cancel.cancelled:
+            return cancelled(exc)
         log.error("audio-qc: %s", exc, exc_info=output is not None)
         recover(exc)
         logs.warnings()
         return 2
-    except KeyboardInterrupt:
-        log.warning("audio-qc: Scan cancelled; source files were opened read-only. Partial evidence may remain in the new report folder.")
-        return 130
+    except KeyboardInterrupt as exc:
+        return cancelled(exc.__context__)
     except Exception as exc:
+        if cancel and cancel.cancelled:
+            return cancelled(exc)
         log.error("❌ An unexpected error occurred.", exc_info=True)
         recover(exc)
         logs.warnings()

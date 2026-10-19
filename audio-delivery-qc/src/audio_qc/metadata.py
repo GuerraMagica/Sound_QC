@@ -51,11 +51,11 @@ def parse_probe(data: dict, audio: AudioFile) -> None:
         raise ToolError("Format exceeds supported limits (256 channels / 768 kHz)")
 
 
-def inspect_metadata(path: Path, audio: AudioFile) -> None:
+def inspect_metadata(path: Path, audio: AudioFile, *, cancel=None) -> None:
     args = ["ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe",
             "-show_entries", "stream=codec_type,codec_name,sample_fmt,sample_rate,channels,channel_layout,bits_per_sample,bits_per_raw_sample,duration,duration_ts,time_base:stream_tags:format=format_name,duration:format_tags",
             "-of", "json", str(path)]
-    with stream_process(args, timeout=60) as output:
+    with stream_process(args, timeout=60, **({"cancel": cancel} if cancel else {})) as output:
         raw = output.read(2 * 1024 * 1024 + 1)
         if len(raw) > 2 * 1024 * 1024:
             raise ToolError("ffprobe metadata exceeds 2 MiB safety limit")

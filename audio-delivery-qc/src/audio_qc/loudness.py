@@ -2,7 +2,7 @@
 import math
 import re
 
-from .process import ffmpeg_input, stream_process
+from .process import ffmpeg_input, stream_process, ToolError
 from .models import MeasurementOutcome, MeasurementState as MS
 
 # Explicit channel assignments only. Immersive/object layouts need a specified render.
@@ -123,7 +123,7 @@ class LoudnessParser:
         }
 
 
-def measure_loudness(path, audio, timeout=None, progress=None) -> dict:
+def measure_loudness(path, audio, timeout=None, progress=None, *, cancel=None) -> dict:
     if audio.measurements.get("nonfinite_samples", 0):
         reason = "Decoded audio contains non-finite samples; EBU R128 measurements cannot be certified"
         metrics = ("integrated_lufs", "true_peak_dbtp", "lra_lu", "max_momentary_lufs", "max_short_term_lufs")
@@ -136,13 +136,6 @@ def measure_loudness(path, audio, timeout=None, progress=None) -> dict:
         reason = "No supported explicit channel layout; channel weighting cannot be verified"
         return {"loudness_unavailable": reason, "measurement_outcomes": {
             k: MeasurementOutcome(MS.UNAVAILABLE, reason) for k in ("integrated_lufs", "true_peak_dbtp")}}
-    parser = LoudnessParser()
-
-    def feed(line):
-        parser.feed(line)
-        if progress and parser.frame_time >= 0:
-            progress(parser.frame_time / audio.duration_seconds if audio.duration_seconds else 0)
-
     args = ffmpeg_input(path, "info")
     if not audio.channel_layout:
         # Only the already-probed mono/stereo counts reach here. Assign their
@@ -151,7 +144,31 @@ def measure_loudness(path, audio, timeout=None, progress=None) -> dict:
         args[args.index("-guess_layout_max") + 1] = str(audio.channels)
     filters = "ebur128=metadata=1:peak=true:dualmono=false,ametadata=mode=print"
     args += ["-af", filters, "-f", "null", "-"]
-    with stream_process(args, timeout, feed) as output:
+    return run_loudness(args, audio.decoded_duration_seconds or audio.duration_seconds,
+                        progress, timeout=timeout, cancel=cancel)
+
+
+def run_loudness(args, duration, progress=None, *, timeout=None, cancel=None, expected_samples=None):
+    """Shared parser/execution; virtual streams additionally prove exact frame count."""
+    parser = LoudnessParser()
+    frames = 0
+
+    def feed(line):
+        nonlocal frames
+        if 'ashowinfo@qc_count' in line:
+            match = re.search(r'nb_samples:(\d+)', line)
+            if match:
+                frames += int(match[1])
+        parser.feed(line)
+        if progress and parser.frame_time >= 0:
+            progress(parser.frame_time / duration if duration else 0)
+
+    with stream_process(args, timeout, feed, **({"cancel": cancel} if cancel else {})) as output:
         while output.read(8192):
             pass
-    return parser.result(audio.decoded_duration_seconds or audio.duration_seconds)
+    if expected_samples is not None and frames != expected_samples:
+        raise ToolError(f"Virtual stream sample count {frames}; expected {expected_samples}")
+    result = parser.result(duration)
+    if expected_samples is not None:
+        result['decoded_sample_frames'] = frames
+    return result

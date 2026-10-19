@@ -30,10 +30,10 @@ def tc_label(tc, day):
 def write_html(report, path):
     from .programme_report import programme_html
     s = report["summary"]
-    compliance_label = "Physical-file QC diagnostics" if report.get("programme_groups") else "Audio QC"
-    programme_notice = ('<p class="notice"><b>Programme compliance: NOT_EVALUATED.</b> '
+    compliance_label = "Delivery QC (physical technical checks + programme levels)" if report.get("programme_groups") else "Audio QC"
+    programme_notice = (f'<p class="notice"><b>Programme compliance: {esc(report.get("programme_compliance"))}.</b> '
                         'File PASS/FAIL counts below apply to configured physical-file checks. '
-                        'Mono Integrated LUFS does not measure assembled-programme loudness; no programme PASS/FAIL is inferred.</p>'
+                        'Mono levels are diagnostic; programme targets are evaluated once against the virtual multichannel measurement.</p>'
                         if report.get("programme_groups") else "")
     timing = report["timecode_reporting"]
     specification = "".join(f"<tr><th>{esc(label)}</th><td>{esc(value)}</td></tr>"

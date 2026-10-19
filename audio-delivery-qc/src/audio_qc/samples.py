@@ -30,7 +30,7 @@ class RunCounter:
 
 
 def analyze_samples(path, audio, requirements: MeasurementRequirements,
-                    context: MeasurementContext | None = None, progress=None):
+                    context: MeasurementContext | None = None, progress=None, *, cancel=None):
     context = context if context is not None else MeasurementContext()
     options = requirements.defect_options
     channels, rate = audio.channels, audio.sample_rate
@@ -51,8 +51,10 @@ def analyze_samples(path, audio, requirements: MeasurementRequirements,
     upper = 1 - 2 ** (1-bits) if integer_pcm and bits and bits <= 32 else 1.0
     digest = hashlib.sha256(struct.pack("<II", rate, channels)) if requirements.hash else None
     args = ffmpeg_input(path) + ["-c:a", "pcm_f64le", "-f", "f64le", "pipe:1"]
-    with stream_process(args, requirements.timeout_seconds) as output:
+    with stream_process(args, requirements.timeout_seconds, **({"cancel": cancel} if cancel else {})) as output:
         while raw := output.read(8192 * channels * 8):
+            if cancel:
+                cancel.raise_if_cancelled()
             if len(raw) % (8*channels):
                 raise ToolError("Decoder produced an incomplete sample frame")
             samples = np.frombuffer(raw, dtype="<f8").reshape(-1, channels)

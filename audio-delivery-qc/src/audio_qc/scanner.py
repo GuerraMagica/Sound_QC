@@ -1,3 +1,4 @@
+from dataclasses import replace
 import os
 from pathlib import Path
 
@@ -40,10 +41,12 @@ def discover(source: Path):
     return files, notices
 
 
-def inspect_file(path: Path, config: dict, with_hash=False, progress=None) -> AudioFile:
+def inspect_file(path: Path, config: dict, with_hash=False, progress=None, *, level_scope="FILE", cancel=None) -> AudioFile:
     requirements = measurement_requirements(config, with_hash)
-    audio, context = measure_file(path, requirements, progress)
-    result = assess_file(audio, config, context)
+    if level_scope == "PROGRAMME_MEMBER":
+        requirements = replace(requirements, levels_required=False)
+    audio, context = measure_file(path, requirements, progress, **({"cancel": cancel} if cancel else {}))
+    result = assess_file(audio, config, context, level_scope=level_scope)
     _check_source_state(path, context)  # Keep the original final check after policy evaluation.
     if context.source_change_error is not None:
         result.operational("source_changed", context.source_change_error, required=True, affects_analysis=True)
@@ -60,7 +63,7 @@ def _check_source_state(path, context):
             context.source_change_error = str(exc)
 
 
-def measure_file(path: Path, requirements: MeasurementRequirements, progress=None):
+def measure_file(path: Path, requirements: MeasurementRequirements, progress=None, *, cancel=None):
     """Collect reusable facts and operational diagnostics; no QC specification."""
     path = path.absolute()
     audio = AudioFile(str(path), path.name)
@@ -91,10 +94,10 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
                 audio.add("bwf_metadata", Status.WARNING, warning)
         except OSError as exc:
             audio.operational("bwf_unavailable", str(exc), required=True, affects_analysis=True)
-        inspect_metadata(path, audio)
+        inspect_metadata(path, audio, **({"cancel": cancel} if cancel else {}))
         try:
             try:
-                analyze_samples(path, audio, requirements, context, phase("Audio samples"))
+                analyze_samples(path, audio, requirements, context, phase("Audio samples"), **({"cancel": cancel} if cancel else {}))
             finally:
                 sample_diagnostics()
             audio.measurement_outcomes["samples"] = MeasurementOutcome(MS.SUCCESS)
@@ -110,7 +113,7 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
             audio.operational("readability", f"Audio decode failed: {exc}", required=True, affects_analysis=True)
         if requirements.ebur128:
             try:
-                measured = measure_loudness(path, audio, requirements.timeout_seconds, phase("EBU R128"))
+                measured = measure_loudness(path, audio, requirements.timeout_seconds, phase("EBU R128"), **({"cancel": cancel} if cancel else {}))
                 audio.measurement_outcomes.update(measured.pop("measurement_outcomes", {}))
                 audio.measurements.update(measured)
             except Exception as exc:
@@ -124,7 +127,7 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
                         outcome = MeasurementOutcome(MS.ERROR, "Requested measurement outcome missing")
                         audio.measurement_outcomes[metric] = outcome
                     if outcome.state == MS.ERROR:
-                        audio.operational(metric, outcome.reason, required=True, affects_analysis=True)
+                        audio.operational(metric, outcome.reason, required=requirements.levels_required, affects_analysis=requirements.levels_required)
             for metric in ("lra_lu", "max_momentary_lufs", "max_short_term_lufs"):
                 outcome = audio.measurement_outcomes.get(metric)
                 if outcome is not None and outcome.state == MS.ERROR:
@@ -133,7 +136,7 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
         audio.operational("inspection", str(exc), required=True, affects_analysis=True)
     if requirements.hash:
         try:
-            audio.sha256 = sha256_file(path, phase("SHA-256"))
+            audio.sha256 = sha256_file(path, phase("SHA-256"), **({"cancel": cancel} if cancel else {}))
         except OSError as exc:
             audio.operational("hash_unavailable", str(exc), required=True)
     _check_source_state(path, context)

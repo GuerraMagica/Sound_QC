@@ -14,8 +14,8 @@ def programme_timecodes(groups, settings):
     result = deepcopy(groups)
     rate = parse_frame_rate(settings["frame_rate"])
     for group in result:
-        group["programme_compliance"] = "NOT_EVALUATED"
-        group["compliance_note"] = ("M5 physical-file checks are diagnostic views, not assembled-programme compliance. "
+        group.setdefault("programme_compliance", "NOT_EVALUATED")
+        group["compliance_note"] = ("Mono level measurements are diagnostic views, not assembled-programme compliance. "
                                     "A mono LUFS comparison against a configured target does not evaluate programme loudness.")
         group["issue_summary"] = {"retained_issues": len(group["issues"]),
                                   "by_type": dict(sorted(Counter(i["event_type"] for i in group["issues"]).items())),
@@ -73,16 +73,26 @@ def programme_html(report):
                            f'{len(group["issues"])} retained group issues. ' +
                            ('These retained results do not represent full defect coverage.' if group["defect_coverage"] != "COMPLETE"
                             else 'Automated candidates still require operator review.') + '</p>')
+        measurement = group.get('programme_measurement', {})
+        metrics = measurement.get('measurements', {})
+        levels = ' · '.join(f'{label}: {esc(metrics.get(key)) if metrics.get(key) is not None else "—"}'
+                            for label, key in (('I (LUFS)', 'integrated_lufs'), ('LRA (LU)', 'lra_lu'), ('TP (dBTP)', 'true_peak_dbtp')))
+        level_summary = (f'<p><b>Programme compliance: {esc(group["programme_compliance"])}</b> · '
+                         f'Measurement: {esc(measurement.get("state", "NOT_EVALUATED"))} · '
+                         f'{esc(measurement.get("method", ""))}</p><p>{levels}</p>')
+        level_diagnostics = ''.join(f'<li>{esc(d["message"])}</li>' for d in measurement.get('operational_diagnostics', []))
+        level_diagnostics += ''.join(f'<li>{esc(c["status"])} · {esc(c["message"])}</li>' for c in group.get('level_checks', []))
         facts = {k: v for k, v in group.items() if k not in ("issues",)}
         sections.append(f'<article><h3>{esc(group["name"])} · {esc(group["layout"])} · {esc(group["validation_status"])}</h3>'
                         f'<p>ID: {esc(group["id"])} · Alignment: {esc(group["alignment_mode"])} · '
                         f'Defect coverage: {esc(group["defect_coverage"])}</p>{coverage_notice}'
-                        '<p><b>Programme compliance: NOT_EVALUATED</b> · structural VALID does not mean delivery PASS.</p>'
-                        '<p>Mono Integrated LUFS versus the configured file target is a physical-channel diagnostic; '
+                        f'{level_summary}<ul>{level_diagnostics}</ul>'
+                        '<p>Structural VALID does not mean delivery PASS; level compliance does not certify defect coverage.</p>'
+                        '<p>Mono Integrated LUFS is a physical-channel diagnostic; '
                         'it cannot establish programme loudness compliance. Physical channel count is per file; 5.1 uses six logical roles.</p>'
                         f'<details><summary>Member mapping / alignment and coverage limitations</summary><ul>{mapping}{reasons}{limitations}</ul></details>'
-                        '<p>Combined programme loudness: <b>Not measured in M5.</b> Combined True Peak: not measured. '
-                        'Measurements and QC compliance below belong to physical files.</p>'
+                        '<p>Combined programme loudness and True Peak are shown above when measured. '
+                        'Measurements below belong to physical files; programme targets apply once per programme.</p>'
                         f'{table}<details><summary>Validation / coverage facts</summary><pre>{esc(json.dumps(facts, ensure_ascii=False, indent=2))}</pre></details></article>')
     return ('<h2>Programme groups</h2><p>File-level issues: ' + str(report["summary"]["file_level_issues"]) +
             ' · Group-level issues: ' + str(report["summary"]["group_level_issues"]) +

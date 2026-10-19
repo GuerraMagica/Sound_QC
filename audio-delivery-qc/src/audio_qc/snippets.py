@@ -2,7 +2,7 @@ from pathlib import Path
 from .process import ffmpeg_input, stream_process, ToolError
 
 
-def export_snippets(audio, output: Path, config, file_index: int):
+def export_snippets(audio, output: Path, config, file_index: int, *, cancel=None):
     if not audio.defects:
         return
     folder = output / "defect_snippets"
@@ -29,7 +29,7 @@ def export_snippets(audio, output: Path, config, file_index: int):
         args[index:index] = ["-ss", f"{start:.12f}"]
         args += ["-n", "-t", f"{end-start:.12f}", "-map_metadata", "-1", "-c:a", "pcm_f32le", "-rf64", "auto", str(target)]
         try:
-            with stream_process(args, config["process_timeout_seconds"]) as pipe:
+            with stream_process(args, config["process_timeout_seconds"], **({"cancel": cancel} if cancel else {})) as pipe:
                 while pipe.read(8192):
                     pass
             event.snippet = relative.as_posix()

@@ -4,7 +4,27 @@ from contextlib import contextmanager
 import os
 import shutil
 import subprocess
-from threading import Thread, Timer
+from threading import Event, Thread, Timer
+
+
+class ScanCancelled(KeyboardInterrupt):
+    """Control flow, never an acoustic or measurement error."""
+
+
+class CancellationToken:
+    def __init__(self):
+        self._event = Event()
+
+    def cancel(self):
+        self._event.set()
+
+    @property
+    def cancelled(self):
+        return self._event.is_set()
+
+    def raise_if_cancelled(self):
+        if self.cancelled:
+            raise ScanCancelled()
 
 
 class ToolError(RuntimeError):
@@ -34,11 +54,13 @@ def check_tools() -> dict:
 
 
 @contextmanager
-def stream_process(args: list[str], timeout=None, line_callback=None):
+def stream_process(args: list[str], timeout=None, line_callback=None, *, cancel=None):
     """Drain stderr concurrently so a full pipe cannot deadlock an audio read."""
     tail = deque(maxlen=32)
     callback_errors = []
     timed_out = []
+    if cancel:
+        cancel.raise_if_cancelled()
     proc = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, env=environment())
 
@@ -54,7 +76,25 @@ def stream_process(args: list[str], timeout=None, line_callback=None):
 
     def expire():
         timed_out.append(True)
-        proc.kill()
+        if proc.poll() is None:
+            proc.kill()
+
+    finished = Event()
+
+    def watch_cancel():
+        while not finished.wait(.05):
+            if cancel.cancelled:
+                if proc.poll() is None:
+                    proc.terminate()
+                    try:
+                        proc.wait(timeout=2)
+                    except subprocess.TimeoutExpired:
+                        proc.kill()
+                return
+
+    watcher = Thread(target=watch_cancel, daemon=True) if cancel else None
+    if watcher:
+        watcher.start()
 
     thread = Thread(target=drain, daemon=True)
     thread.start()
@@ -66,18 +106,27 @@ def stream_process(args: list[str], timeout=None, line_callback=None):
         yield proc.stdout
         result = proc.wait()
         thread.join()
+        if cancel:
+            cancel.raise_if_cancelled()
         if timed_out:
             raise ToolError(f"Process exceeded configured timeout ({timeout}s)")
         if result:
             raise ToolError("\n".join(tail)[-8192:] or f"Process exited with code {result}")
         if callback_errors:
             raise ToolError(f"Measurement parser failed: {callback_errors[0]}")
+    except Exception:
+        if cancel:
+            cancel.raise_if_cancelled()
+        raise
     finally:
+        finished.set()
         if timer:
             timer.cancel()
         if proc.poll() is None:
             proc.kill()
         proc.wait()
+        if watcher:
+            watcher.join(timeout=3)
         thread.join(timeout=2)
         proc.stdout.close()
         proc.stderr.close()

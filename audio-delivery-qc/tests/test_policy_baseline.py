@@ -130,7 +130,7 @@ def test_pre_m3_reports_and_decisions_unchanged(tmp_path, case):
     output.mkdir()
     write_reports(report, output)
     saved = json.loads((output/'QC_REPORT.json').read_text())
-    assert saved['schema_version'] == 4
+    assert saved['schema_version'] == 5
     assert saved['status'] == report['status']
     assert all((output/name).is_file() for name in ('QC_REPORT.html','QC_REPORT.csv','QC_DEFECTS.csv'))
     assert 'http://' not in (output/'QC_REPORT.html').read_text()

@@ -95,7 +95,7 @@ def test_scope_category_summary_and_cap_are_explicit_without_reclassifying_files
                           programme_settings=default_group_settings())
     assert files == before
     assert report["audio_compliance"] == "FAIL"  # Preserve configured physical-file diagnostics.
-    assert report["compliance_scope"] == "PHYSICAL_FILES"
+    assert report["compliance_scope"] == "PHYSICAL_FILES_AND_PROGRAMME_LEVELS"
     assert report["programme_compliance"] == "NOT_EVALUATED"
     group, = report["programme_groups"]
     assert group["programme_compliance"] == "NOT_EVALUATED"
@@ -105,7 +105,7 @@ def test_scope_category_summary_and_cap_are_explicit_without_reclassifying_files
     assert len(group["issues"]) == 1000
     write_reports(report, tmp_path)
     html = (tmp_path/"QC_REPORT.html").read_text()
-    assert "Physical-file QC diagnostics" in html
+    assert "Delivery QC (physical technical checks + programme levels)" in html
     assert "Programme compliance: NOT_EVALUATED" in html
     assert "These retained results do not represent full defect coverage" in html
     assert html.count('<details class="issue-category">') == 2

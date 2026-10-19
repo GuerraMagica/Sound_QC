@@ -9,6 +9,7 @@ class MeasurementRequirements:
     defect_options: dict | None
     hash: bool = False
     timeout_seconds: float | None = None
+    levels_required: bool = True
 
     @property
     def ebur128(self) -> bool:

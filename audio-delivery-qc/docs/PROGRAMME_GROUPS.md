@@ -1,4 +1,13 @@
-# M5 programme groups
+# Programme groups — M5 relationships and M6 measurement
+
+**Current M6 extension:** the M5 structural/grouping rules below are preserved.
+The loudness and schema-4 sections describe the accepted M5 baseline; in M6,
+[virtual programme measurement](../README.md#m6--virtual-programme-levels-local-implementation-acceptance-pending)
+adds stricter timing eligibility, programme level policy and schema 5. Mono levels
+are diagnostics, not programme target decisions. Explicit `common_file_start` is
+required without BWF, and contradictory BWF always prevents M6 measurement.
+Level compliance, structural validity and defect coverage are separate.
+See [current validation and limitations](M6_VALIDATION.md).
 
 M5 adds an optional validated relationship between independently inspected mono
 PCM WAV/BWF files. It does not assemble audio or measure combined loudness, LRA

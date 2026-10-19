@@ -60,7 +60,9 @@ def evaluate_level_policy(m: dict, c: dict, outcomes=None) -> list[Check]:
     return checks
 
 
-def _evaluate_file(a: AudioFile, c: dict, context: MeasurementContext):
+def _evaluate_file(a: AudioFile, c: dict, context: MeasurementContext, level_scope="FILE"):
+    if level_scope not in ("FILE", "PROGRAMME_MEMBER"):
+        raise ValueError("Unknown level scope: " + level_scope)
     checks = []
     # Policy-created zero-run evidence is regenerated from technical run facts,
     # never counted as an extra raw detector candidate on re-evaluation.
@@ -109,7 +111,10 @@ def _evaluate_file(a: AudioFile, c: dict, context: MeasurementContext):
             add("nonfinite_samples", Status.FAIL, f"{m['nonfinite_samples']} non-finite floating-point samples")
         if m["digital_silence"]:
             add("silence", Status.INFO, "All decoded samples are digital zero; logarithmic levels unavailable")
-    checks.extend(evaluate_level_policy(m, c, a.measurement_outcomes))
+    if level_scope == "FILE":
+        checks.extend(evaluate_level_policy(m, c, a.measurement_outcomes))
+    else:
+        add("level_scope", Status.INFO, "Mono levels are diagnostic; programme levels assessed separately")
     if defects:
         add("defect_candidates", Status.WARNING, f"{len(defects)} possible defects require human review")
     elif c["defects"]["enabled"] and "decoded_sample_frames" in m:
@@ -129,21 +134,21 @@ def _evaluate_file(a: AudioFile, c: dict, context: MeasurementContext):
 
 
 def evaluate_file_policy(audio: AudioFile, policy: dict,
-                         context: MeasurementContext | None = None) -> list[Check]:
+                         context: MeasurementContext | None = None, *, level_scope="FILE") -> list[Check]:
     """Return deterministic policy checks without I/O or mutation of input facts."""
-    checks, _ = _evaluate_file(audio, policy, context if context is not None else MeasurementContext())
+    checks, _ = _evaluate_file(audio, policy, context if context is not None else MeasurementContext(), level_scope)
     return checks
 
 
 def assess_file(audio: AudioFile, policy: dict,
-                context: MeasurementContext | None = None) -> AudioFile:
+                context: MeasurementContext | None = None, *, level_scope="FILE") -> AudioFile:
     """Create a report copy with policy checks and classified evidence.
 
     Pass the measured AudioFile (its checks contain operational diagnostics),
     retaining that original for reuse against another policy.
     """
     result = deepcopy(audio)
-    checks, defects = _evaluate_file(result, policy, context if context is not None else MeasurementContext())
+    checks, defects = _evaluate_file(result, policy, context if context is not None else MeasurementContext(), level_scope)
     result.checks.extend(checks)
     result.defects = defects
     return result
@@ -154,3 +159,15 @@ def apply_rules(audio: AudioFile, policy: dict, zero_runs=()) -> None:
     checks, defects = _evaluate_file(audio, policy, MeasurementContext(zero_runs=tuple(zero_runs)))
     audio.checks.extend(checks)
     audio.defects = defects
+
+
+def assess_programme(measurement, policy) -> list[Check]:
+    """Programme thresholds use the same canonical comparisons as physical files."""
+    if measurement.state == 'DISABLED':
+        return [Check('programme_levels', Status.INFO, 'Programme level measurement disabled by configuration')]
+    if measurement.state == 'NOT_EVALUATED':
+        return [Check('programme_levels', Status.INCOMPLETE, 'Requested programme levels could not be certified')]
+    checks = evaluate_level_policy(measurement.measurements, policy, measurement.measurement_outcomes)
+    if measurement.state == 'ERROR':
+        checks.insert(0, Check('programme_levels', Status.INCOMPLETE, 'Requested programme levels could not be certified'))
+    return checks

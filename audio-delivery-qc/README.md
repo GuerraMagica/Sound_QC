@@ -116,7 +116,7 @@ The exact saved file also works with the CLI:
 audio-qc inspect "/path/to/audio.wav" --config "/path/to/Especificación CUSTOM.yaml"
 ```
 
-GUI, YAML and CLI all use the same configuration resolver and QC policy evaluator. Run captures a private validated configuration snapshot; later edits to the original YAML cannot affect that scan. The controls and Run button are disabled until completion. JSON retains the resolved configuration in schema version **4**, and HTML displays an **Especificación efectiva** table. Defect and timecode settings remain outside the delivery editor and are retained in saved YAML. Hashing and evidence-export checkboxes remain execution options; use `--hash` and `--export-defect-snippets` for equivalent CLI runs.
+GUI, YAML and CLI all use the same configuration resolver and QC policy evaluator. Run captures a private validated configuration snapshot; later edits to the original YAML cannot affect that scan. The controls and Run button are disabled until completion. JSON retains the resolved configuration in schema version **5**, and HTML displays an **Especificación efectiva** table. Defect and timecode settings remain outside the delivery editor and are retained in saved YAML. Hashing and evidence-export checkboxes remain execution options; use `--hash` and `--export-defect-snippets` for equivalent CLI runs.
 
 True Peak is an upper limit: a maximum of −6 dBTP accepts −8 and −6, and rejects −5. Loudness −14 LUFS ±1 accepts −15 through −13 under the existing numeric tolerance. Disabling Loudness with no True Peak maximum retains the existing behavior of not scheduling that FFmpeg measurement; unavailable values remain unavailable. Clipping uses the existing criterion, and allowed channel counts refer to one physical file.
 
@@ -143,7 +143,7 @@ The **Frame Rate** selector sits beside the QC preset in the GUI. It changes rep
 
 For BWF, the conversion is `floor((TimeReference + sample_index) × fps_numerator / (sample_rate × fps_denominator))`. The sum happens **before** conversion, so subframe BWF origins are preserved. Manual TC is parsed into an exact frame count and offsets are added from audio samples. Each displayed TC identifies the video frame containing that exact sample; nothing is snapped, quantized or moved in the source or detector.
 
-The defect table makes monospaced **TC** the primary location and shows **Offset** as `HH:MM:SS.mmm` from file start, truncated to the containing millisecond. Full `sample_index` and `timestamp_seconds` remain unchanged in JSON and under Evidence. New JSON fields include `timecode`, `timecode_frame_rate`, `timecode_basis`, `file_start_timecode`, `timecode_day_offset` and `offset`. Each file also has `timecode_reporting` with the exact rate, effective source, fallback reason and start TC. These fields were added in schema version 2 and remain in the current schema version 4 with issue consolidation and execution diagnostics; original fields are retained.
+The defect table makes monospaced **TC** the primary location and shows **Offset** as `HH:MM:SS.mmm` from file start, truncated to the containing millisecond. Full `sample_index` and `timestamp_seconds` remain unchanged in JSON and under Evidence. New JSON fields include `timecode`, `timecode_frame_rate`, `timecode_basis`, `file_start_timecode`, `timecode_day_offset` and `offset`. Each file also has `timecode_reporting` with the exact rate, effective source, fallback reason and start TC. These fields were added in schema version 2 and remain in the current schema version 5 with issue consolidation and execution diagnostics; original fields are retained.
 
 The header states frame rate, TC source and file start TC. It explicitly identifies frame rate as a reporting setting and the TC labels as derived navigation data, rather than metadata embedded in the WAV. For a mixed folder it directs the operator to each file's start/source rather than assigning one shared origin. The existing file-level CSV keeps all columns and one row per file. Conventional TC wraps at 24 hours; separate day offsets avoid losing the elapsed day count. File-relative offsets can exceed 24 hours.
 
@@ -234,7 +234,7 @@ Re-evaluation can use only facts actually collected. Numeric measurements omitte
 
 The self-contained HTML needs no server or external assets. Click filenames for all checks and expand technical details for metadata, loudness maxima and hashes. Each defect issue shows TC, offset, affected channels, representative duration/method, and expandable per-channel evidence. CSV is UTF-8 with BOM; possible spreadsheet formulas in text fields are escaped. JSON contains complete data. Unavailable metrics are **null** in JSON, blank in CSV, and **—** in HTML, never fabricated zeros. Digital silence has a separate flag.
 
-JSON schema **4** retains the `defects` list and its scalar fields, now representing operator-facing issues. Detector issues add `channels` and `channel_events`; each nested event retains its original sample/timestamp/measurements, raw count, sample bounds and report-only TC. `summary.defect_issues` is the row count; `defect_candidates` remains a legacy alias for that count. `QC_DEFECTS.csv` has one row per issue and appends Channels, Channel Events, Merged Candidate Count and sample bounds; the existing scalar Channel/Evidence columns still describe the representative. `QC_REPORT.csv` keeps its file rows and legacy Defect Candidates count column. Explicit zero-run policy findings retain their prior single-channel shape. Schema 2 consumers that assumed one channel per row must use the new channels array.
+JSON schema **5** retains the `defects` list and its scalar fields, now representing operator-facing issues. Detector issues add `channels` and `channel_events`; each nested event retains its original sample/timestamp/measurements, raw count, sample bounds and report-only TC. `summary.defect_issues` is the row count; `defect_candidates` remains a legacy alias for that count. `QC_DEFECTS.csv` has one row per issue and appends Channels, Channel Events, Merged Candidate Count and sample bounds; the existing scalar Channel/Evidence columns still describe the representative. `QC_REPORT.csv` keeps its file rows and legacy Defect Candidates count column. Explicit zero-run policy findings retain their prior single-channel shape. Schema 2 consumers that assumed one channel per row must use the new channels array.
 
 Mixed mono/stereo/surround counts are informational unless `channels.allowed` is configured. Group duration/format differences warn because the folder may contain unrelated programmes. Default missing-stem inference requires at least two exact delimited DIA/FX/MX tokens with the same parent and name skeleton, such as `REEL01_DIA_v2.wav` and `REEL01_FX_v2.wav`. It never assumes every folder requires an M&E/full mix. Explicit `expected_stems` uses those same name groups and still warns.
 
@@ -341,3 +341,56 @@ One programme issue retains all source events and labelled mono evidence links.
 File/group counts are separate. **Combined programme loudness, LRA and True Peak
 are not measured in M5.** See [configuration, conservative alignment rules,
 report compatibility and reproducible validation](docs/PROGRAMME_GROUPS.md).
+
+## M6 — virtual programme levels (local implementation, acceptance pending)
+
+For eligible stereo/5.1 groups, the existing `--groups groups.yaml` or
+`--detect-groups` workflow now measures Integrated LUFS, LRA and True Peak from a
+virtual multichannel stream. No full-length assembled master is written.
+Stereo maps L/R to FL/FR; 5.1 maps L/R/C/LFE/Ls/Rs to FL/FR/FC/LFE/SL/SR
+(`5.1(side)`). LFE contributes to True Peak, not programme loudness.
+
+M6 requires a VALID M5 group, complete mono PCM sources with identical sample rate,
+exact decoded length and reliable common timing. Missing BWF requires explicit
+`common_file_start`; M5's automatic no-BWF fallback does not authorize programme
+measurement. Contradictory BWF origins block M6 even in common-file-start mode.
+No padding, trimming, gain changes or resynchronization is applied. Member bit depths
+may differ; internal format conversion is checked for sample-value preservation.
+
+Enabled mono EBU measurements are retained as diagnostics; one additional pass
+measures each eligible programme. Existing targets are evaluated once on programme
+levels; mono members no longer receive programme loudness/TP target failures.
+Physical technical checks and defects remain active. Invalid groups never fall
+back to mono programme targets. Requested unavailable/failed programme analysis
+makes the scan incomplete (exit 2); a completed acoustic failure returns 1.
+Legitimately undefined loudness remains null/UNAVAILABLE and uses existing policy.
+LRA remains report-only. Disabling loudness with no True Peak maximum disables the
+programme EBU pass; structural groups and evidence still work.
+
+JSON **schema 5** retains source measurements, sample/timecode/event provenance,
+file/group issue lists and existing CSV columns. It adds `programme_measurement`,
+`measurement_eligibility`, `level_checks`, `level_scope`, `level_policy` and scoped
+`programme_compliance`. Global QC combines physical technical checks and programme
+level checks; file status counts still count physical files. A level PASS does not
+certify full defect coverage; caps/INCOMPLETE remain visible. Schema 4 reports and
+historical validation records are not rewritten.
+
+GUI **Cancelar QC** requests cooperative cancellation, waits for the decoder and
+returns control. CLI Ctrl+C also cleans up the current process. Exit 130 is not a
+completed report: there is no `QC_COMPLETE.json`; available completed facts may be
+saved as `QC_RECOVERY.json`. Existing evidence is retained. GUI configuration and
+group membership use the same immutable scan snapshot as before.
+
+Reproducible synthetic acceptance (choose a new output directory):
+
+```sh
+python scripts/verify_m6.py --output /tmp/xqc-m6-NEW --memory
+```
+
+The memory check uses local process RSS on macOS/Linux and may need permission to
+inspect process statistics. The runner writes only new synthetic fixtures and
+reports, preserves hashes/size/mtime, and records actual operational scenarios and
+reference deltas. `verify_m5.py` records M5-specific scope expectations; use M6
+acceptance for the new semantics rather than treating its historical assertions
+as the current release gate. See [M6 validation](docs/M6_VALIDATION.md) for results
+and outstanding Linux/professional acceptance checks. No M7/M8 work is included.

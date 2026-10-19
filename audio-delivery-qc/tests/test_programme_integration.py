@@ -47,10 +47,10 @@ def test_real_cli_groups_evidence_reports_and_source_integrity(tmp_path, monkeyp
         return original(path, *args, **kwargs)
     monkeypatch.setattr(cli, "inspect_file", counted)
     code = main(["inspect", str(source), "--detect-groups", "--export-defect-snippets", "--output", str(output)])
-    assert code in (0, 1)
+    assert code == 2  # Requested M6 levels for invalid groups are incomplete.
     report = json.loads((output/"QC_REPORT.json").read_text())
     html = (output/"QC_REPORT.html").read_text()
-    assert report["schema_version"] == 4
+    assert report["schema_version"] == 5
     assert len(calls) == len(set(calls)) == len(paths)
     groups = report["programme_groups"]
     assert len(groups) == 4
@@ -58,7 +58,7 @@ def test_real_cli_groups_evidence_reports_and_source_integrity(tmp_path, monkeyp
     assert {g["layout"] for g in valid} == {"stereo", "5.1"}
     for group in valid:
         assert group["defect_coverage"] == "COMPLETE"
-        assert group["combined_programme_loudness"] == "Not measured in M5."
+        assert group["programme_measurement"]["state"] == "SUCCESS"
         shared = [e for e in group["issues"] if e["sample_index"] == 48000]
         assert len(shared) == 1
         assert shared[0]["channels"] == list(LAYOUTS[group["layout"]])
@@ -77,7 +77,7 @@ def test_real_cli_groups_evidence_reports_and_source_integrity(tmp_path, monkeyp
                 assert original_event["measurements"] == event["source_event"]["measurements"]
     assert 'target="_blank" rel="noopener"' in html
     assert "Channels: L, R, C, LFE, Ls, Rs" in html
-    assert "Not measured in M5." in html
+    assert "virtual_multichannel" in html
     assert report["summary"]["group_level_issues"] == sum(len(g["issues"]) for g in groups)
     assert report["summary"]["file_level_issues"] == report["summary"]["defect_issues"]
     assert report["summary"]["file_level_issues"] > report["summary"]["group_level_issues"]
