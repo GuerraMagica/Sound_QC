@@ -1,6 +1,6 @@
 # XQC — estado vigente
 
-Actualización documental: **19 de octubre de 2026**. Este documento sintetiza la
+Actualización documental: **20 de octubre de 2026**. Este documento sintetiza la
 baseline observada y las decisiones del usuario; no es una nueva certificación QC.
 
 ## 1. Identificación del proyecto
@@ -158,10 +158,18 @@ y al [plan aprobado](docs/superpowers/plans/2026-10-19-m6-programme-measurement.
 
 ## 10. Próximo objetivo aprobado
 
-**Publicar la rama M6 validada localmente y comprobar su CI en GitHub**,
-sin avanzar M7/M8. El usuario autorizó commit y push de esta rama; no merge a main,
-tags ni publicación de material de producción. La aceptación requiere
-revisar las limitaciones y pruebas pendientes del registro M6.
+**Cambiar la sensibilidad predeterminada de clicks a `low`, validar y publicar**,
+autorizado por el usuario el 20/10. Prioridad: lectura/integridad y posibles
+dropouts; este ajuste no modifica esos análisis ni implementa el detector M7.
+Los YAML con sensibilidad explícita conservan su valor. No autoriza merge a main,
+tags ni publicación de material de producción. El límite compartido de candidatos
+y los avisos de cobertura incompleta siguen vigentes.
+
+Validación de este ajuste el 20/10: 85 pruebas focalizadas y 690 completas
+aprobadas (sin fallos ni omisiones; macOS, Python 3.14.8). Comparación de los ocho
+fixtures sintéticos existentes: ambos niveles detectan los cinco casos positivos
+y no señalan los tres controles; los eventos de dropout son idénticos. Esto no
+mide falsas alarmas sobre Foley real ni descarta pérdida de clicks más débiles.
 
 ## 11. Referencias documentales
 

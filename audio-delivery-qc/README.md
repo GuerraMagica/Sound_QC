@@ -197,7 +197,7 @@ defects:
     cross_channel_merge_ms: 1.0  # earliest channel-event starts; 0–10 ms
   clicks:
     enabled: true
-    sensitivity: medium         # low / medium / high
+    sensitivity: low            # default; low / medium / high
     min_local_deviation_db: 12
     max_duration_ms: 5
     merge_gap_ms: 1.0            # click consolidation only; 0–10 ms, inclusive gap
@@ -210,7 +210,9 @@ defects:
     fail_zero_run_ms: null       # explicit contractual rule only
 ```
 
-Lower click sensitivity is more conservative. `max_candidates` counts operator-facing detector issues **after both intra-channel and cross-channel consolidation**. Raw detections and channel events do not consume separate slots. When an additional issue would exceed the cap, the detector finishes retained click clusters and open cross-channel start windows (including across core windows), then stops candidate analysis and warns; technical measurements continue. Exactly filling the cap without additional issues does not warn. The existing explicit zero-run policy rule still examines the full decoded stream and records the longest violating run per channel, independently of this detector cap. Those explicit rule findings can add report rows. This can fail intentional silence: leave it null unless explicitly required.
+Click sensitivity defaults to `low` for more conservative candidate selection. Existing YAML specifications that explicitly set `medium` or `high` keep their setting; edit `defects.clicks.sensitivity` to opt into `low`. Restart an open GUI to use the new defaults. Lower sensitivity can miss weaker clicks and does not establish whether a transient is intentional. Dropout settings and source-readability checks are unchanged. Defect detection still requires `--defects` or the GUI's **Detect defect candidates** option.
+
+`max_candidates` counts operator-facing detector issues **after both intra-channel and cross-channel consolidation**. Raw detections and channel events do not consume separate slots. When an additional issue would exceed the cap, the detector finishes retained click clusters and open cross-channel start windows (including across core windows), then stops candidate analysis and warns; technical measurements continue. Exactly filling the cap without additional issues does not warn. The existing explicit zero-run policy rule still examines the full decoded stream and records the longest violating run per channel, independently of this detector cap. Those explicit rule findings can add report rows. This can fail intentional silence: leave it null unless explicitly required.
 
 CLI timecode flags override YAML before validation. `--timecode-source AUTO` or `FILE_RELATIVE` clears a YAML manual start; an explicitly conflicting `--start-timecode` is rejected. The GUI can load YAML and its visible reporting controls override those settings. Timecode changes do not modify any defect settings.
 

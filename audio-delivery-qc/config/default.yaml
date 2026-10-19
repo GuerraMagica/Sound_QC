@@ -23,7 +23,7 @@ defects:
     cross_channel_merge_ms: 1.0
   clicks:
     enabled: true
-    sensitivity: medium
+    sensitivity: low
     min_local_deviation_db: 12
     max_duration_ms: 5
     merge_gap_ms: 1.0

@@ -31,7 +31,7 @@ BASE = {
         "issues": {"cross_channel_merge_ms": 1.0},
         "snippet_before_seconds": 1.0,
         "snippet_after_seconds": 1.0,
-        "clicks": {"enabled": True, "sensitivity": "medium",
+        "clicks": {"enabled": True, "sensitivity": "low",
                    "min_local_deviation_db": 12, "max_duration_ms": 5, "merge_gap_ms": 1.0},
         "dropouts": {"enabled": True, "zero_run_ms": 5,
                      "relative_level_drop_db": 30, "min_duration_ms": 2,
