@@ -187,3 +187,12 @@ describe M3.1 dentro de una fuente; M5 añade agrupación entre fuentes validada
 «No M5/M6 work is included» pertenece al registro del hotfix, no al estado global.
 Las cifras y limitaciones antiguas se conservan como historia; este documento
 identifica su alcance sin reescribirlas ni presentar pruebas históricas como actuales.
+
+## Experimento de confirmación de clicks (20/10/2026)
+
+Autorizada una herramienta independiente y plantilla de anotación; el material real
+se etiquetará después. Compara baseline `2e74a097455dbb30cd2f2df312e078aeae35a426`
+(low) con contexto temporal y predicción lineal, sin integrar cambios en producción.
+Véase [alcance, uso y criterios](docs/CLICK_EXPERIMENT.md). No supone aceptación de
+un detector M7 ni modifica dropouts, política QC o capacidades de M6. La eficacia
+sobre Print Masters reales queda pendiente de validación con reserva independiente.

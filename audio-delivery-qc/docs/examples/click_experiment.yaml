@@ -1,0 +1,47 @@
+# Plantilla: copiar fuera del repositorio y completar con audio local.
+# NO contiene anotaciones reales. reviewed: true solo tras revisar TODO el intervalo.
+# Un programme no puede aparecer en ambos splits. Reservar al menos dos programas.
+# Muestras absolutas relativas al archivo, intervalos [start_sample, end_sample).
+# Canales físicos: 1..N, nunca etiquetas de altavoz inferidas.
+schema_version: 1
+clips:
+  - id: desarrollo-01
+    programme: programa-desarrollo
+    split: development
+    origin: real
+    file: fuentes/desarrollo.wav
+    sample_rate: 48000
+    start_sample: 0
+    end_sample: 1440000 # 30 segundos; ajustar a duración real
+    channels: [1, 2]
+    reviewed: false
+    annotations: []
+    # Sustituir [] por anotaciones como esta, después de escuchar:
+    # - id: click-001
+    #   channel: 1
+    #   start_sample: 48000
+    #   end_sample: 48001
+    #   kind: technical_click
+    # kind: technical_click | intentional_transient | uncertain
+  - id: reserva-01
+    programme: programa-reserva-a
+    split: validation
+    origin: real
+    file: fuentes/reserva-a.wav
+    sample_rate: 48000
+    start_sample: 0
+    end_sample: 1440000
+    channels: [1, 2]
+    reviewed: false
+    annotations: []
+  - id: reserva-02
+    programme: programa-reserva-b
+    split: validation
+    origin: real
+    file: fuentes/reserva-b.wav
+    sample_rate: 48000
+    start_sample: 0
+    end_sample: 1440000
+    channels: [1, 2]
+    reviewed: false
+    annotations: []

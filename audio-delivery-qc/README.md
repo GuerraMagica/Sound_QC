@@ -396,3 +396,7 @@ reference deltas. `verify_m5.py` records M5-specific scope expectations; use M6
 acceptance for the new semantics rather than treating its historical assertions
 as the current release gate. See [M6 validation](docs/M6_VALIDATION.md) for results
 and outstanding Linux/professional acceptance checks. No M7/M8 work is included.
+
+Independent click-confirmation experiment (no production detector changes): see
+[local evaluation and annotation template](docs/CLICK_EXPERIMENT.md). Real labelled
+material is still required; synthetic results do not establish detector viability.
