@@ -127,7 +127,7 @@ def evidence_for_discarded(record, selected, output, index):
 
 def run(manifest, output):
     manifest, output = Path(manifest).resolve(), Path(output).resolve()
-    clips = load_manifest(manifest)
+    clips = load_manifest(manifest, expected_schema=1)
     if output.exists(): raise FileExistsError(f'Use a new output directory: {output}')
     repo = Path(__file__).resolve().parents[3]
     if any(c['origin'] == 'real' for c in clips) and output.is_relative_to(repo):

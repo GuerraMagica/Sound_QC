@@ -24,7 +24,7 @@ def name(value):
     return value
 
 
-def load_manifest(path):
+def load_manifest(path, *, expected_schema=None):
     path = Path(path).resolve()
     if path.stat().st_size > 2 * 1024 * 1024:
         raise ValueError('Manifest exceeds 2 MiB')
@@ -33,8 +33,10 @@ def load_manifest(path):
     except (yaml.YAMLError, RecursionError) as exc:
         raise ValueError(f'Invalid YAML: {exc}') from exc
     fields(data, {'schema_version', 'clips'})
-    if type(data['schema_version']) is not int or data['schema_version'] != 1:
+    if type(data['schema_version']) is not int or data['schema_version'] not in (1, 2):
         raise ValueError('Unsupported manifest schema_version')
+    if expected_schema is not None and data['schema_version'] != expected_schema:
+        raise ValueError('Manifest schema/mode mismatch: schema 1 uses the legacy experiment; schema 2 requires --essentia')
     if not isinstance(data['clips'], list) or not 1 <= len(data['clips']) <= 200:
         raise ValueError('Provide 1–200 clips')
     clips, ids, programmes, sources = [], set(), {}, {}
@@ -73,13 +75,23 @@ def load_manifest(path):
             raise ValueError('At most 2000 annotations per clip')
         label_ids, labels = set(), []
         for item in c['annotations']:
-            fields(item, {'id', 'channel', 'start_sample', 'end_sample', 'kind'})
+            extra = {'qc_disposition', 'basis'} if data['schema_version'] == 2 else set()
+            fields(item, {'id', 'channel', 'start_sample', 'end_sample', 'kind'} | extra)
             a = dict(item)
             aid = name(a['id'])
             if aid in label_ids: raise ValueError('Duplicate annotation ID')
             label_ids.add(aid)
             integer(a['channel'], 'annotation channel', 1)
             if a['channel'] not in channels or a['kind'] not in KINDS: raise ValueError('Invalid annotation channel/kind')
+            if extra:
+                if a['qc_disposition'] not in ('reject', 'acceptable', 'uncertain'):
+                    raise ValueError('Invalid qc_disposition')
+                if a['basis'] not in ('operator', 'documented_rejection'):
+                    raise ValueError('Invalid assessment basis')
+                if a['kind'] == 'intentional_transient' and a['qc_disposition'] == 'reject':
+                    raise ValueError('An intentional transient cannot label a rejected click')
+                if a['kind'] == 'uncertain' and a['qc_disposition'] != 'uncertain':
+                    raise ValueError('Uncertain events require uncertain disposition')
             s, e = integer(a['start_sample'], 'annotation start'), integer(a['end_sample'], 'annotation end', 1)
             if not start <= s < e <= end: raise ValueError('Annotation outside clip')
             if any(b['channel'] == a['channel'] and s < b['end_sample'] and e > b['start_sample'] for b in labels):

@@ -10,9 +10,14 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path, help='New directory, separate from audio sources')
+    parser.add_argument('--essentia', action='store_true', help='Opt-in independent-detector benchmark (isolated Essentia runtime, schema 2)')
     args = parser.parse_args(argv)
     try:
-        result = run(args.manifest, args.output)
+        if args.essentia:
+            from click_experiment.benchmark import run as independent_run
+            result = independent_run(args.manifest, args.output)
+        else:
+            result = run(args.manifest, args.output)
     except KeyboardInterrupt:
         print('Experiment cancelled; no completed evaluation.', file=sys.stderr)
         return 130

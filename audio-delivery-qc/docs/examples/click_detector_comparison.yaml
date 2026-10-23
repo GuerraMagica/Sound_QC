@@ -1,0 +1,52 @@
+# Copiar FUERA de Git y completar localmente. No contiene etiquetas reales.
+# Separar programas completos; nunca usar la reserva para reajustar parámetros.
+# Un click audible no implica rechazo. Escuchar TODO el intervalo, no solo issues.
+# Canales físicos 1..N; muestras relativas al archivo; extremo final EXCLUSIVO.
+schema_version: 2
+clips:
+  - id: desarrollo-01
+    programme: programa-desarrollo
+    split: development
+    origin: real
+    file: fuentes/desarrollo.wav
+    sample_rate: 48000
+    start_sample: 0
+    end_sample: 1440000
+    channels: [1, 2]
+    reviewed: false
+    annotations: []
+    # Tras escuchar, sustituir [] por anotaciones como:
+    # - id: click-001
+    #   channel: 1
+    #   start_sample: 48000
+    #   end_sample: 48001
+    #   kind: technical_click
+    #   qc_disposition: reject
+    #   basis: operator
+    # kind: technical_click | intentional_transient | uncertain
+    # qc_disposition: reject | acceptable | uncertain
+    # basis: operator | documented_rejection (no equivale a certificado Netflix)
+    # Foley/pasos/armas/percusión/consonantes correctos: intentional_transient / acceptable.
+    # Click leve aceptable: technical_click / acceptable. No forzar casos dudosos.
+  - id: reserva-01
+    programme: programa-reserva-a
+    split: validation
+    origin: real
+    file: fuentes/reserva-a.wav
+    sample_rate: 48000
+    start_sample: 0
+    end_sample: 1440000
+    channels: [1, 2]
+    reviewed: false
+    annotations: []
+  - id: reserva-02
+    programme: programa-reserva-b
+    split: validation
+    origin: real
+    file: fuentes/reserva-b.wav
+    sample_rate: 48000
+    start_sample: 0
+    end_sample: 1440000
+    channels: [1, 2, 3, 4, 5, 6]
+    reviewed: false
+    annotations: []

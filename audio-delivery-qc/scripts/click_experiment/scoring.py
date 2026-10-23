@@ -41,26 +41,28 @@ def prediction_error(context, candidate, order):
     return error / max(residual, 1e-7)
 
 
-def score_context(pre, candidate, post, rate):
+def score_context(pre, candidate, post, rate, *, methods=('temporal', 'prediction')):
     if min(len(pre), len(post), len(candidate)) == 0 or min(len(pre), len(post)) < rate * .02:
-        return {m: unavailable('insufficient_context') for m in ('temporal', 'prediction')}
+        return {m: unavailable('insufficient_context') for m in methods}
     if len(candidate) > rate * .02:
-        return {m: unavailable('cluster_longer_than_20ms') for m in ('temporal', 'prediction')}
+        return {m: unavailable('cluster_longer_than_20ms') for m in methods}
     if not all(np.all(np.isfinite(a)) for a in (pre, candidate, post)):
-        return {m: unavailable('nonfinite_context') for m in ('temporal', 'prediction')}
+        return {m: unavailable('nonfinite_context') for m in methods}
     center = float(np.median(np.r_[pre, post]))
     peak = float(np.max(np.abs(candidate - center)))
     before, after = rms(pre - center), rms(post - center)
     temporal = {'score': peak / max(before, after, 1e-7),
                 'reason': 'impulse_relative_to_stronger_surrounding_envelope',
                 'pre_rms': before, 'post_rms': after, 'impulse_peak': peak}
+    if 'prediction' not in methods:
+        return {'temporal': temporal} if 'temporal' in methods else {}
     order = max(4, min(64, round(24 * rate / 48000)))
     forward = prediction_error(pre, candidate, order)
     backward = prediction_error(post[::-1], candidate[::-1], order)
     prediction = (unavailable('unreliable_prediction') if forward is None or backward is None else
                   {'score': min(forward, backward), 'reason': 'two_sided_prediction_error',
                    'forward': forward, 'backward': backward, 'order': order})
-    return {'temporal': temporal, 'prediction': prediction}
+    return {m: v for m, v in {'temporal': temporal, 'prediction': prediction}.items() if m in methods}
 
 
 def retain(score, threshold):

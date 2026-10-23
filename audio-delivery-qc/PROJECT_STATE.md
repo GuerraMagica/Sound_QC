@@ -196,3 +196,12 @@ se etiquetará después. Compara baseline `2e74a097455dbb30cd2f2df312e078aeae35a
 Véase [alcance, uso y criterios](docs/CLICK_EXPERIMENT.md). No supone aceptación de
 un detector M7 ni modifica dropouts, política QC o capacidades de M6. La eficacia
 sobre Print Masters reales queda pendiente de validación con reserva independiente.
+
+Ampliación experimental aprobada el 22/10 y ejecutada el 23/10/2026: comparación
+opcional con Essentia ClickDetector independiente y etiquetas de rechazo profesional.
+Véase [protocolo v2 y validación](docs/CLICK_EXPERIMENT.md#comparación-independiente-con-essentia--protocolo-v2).
+Conserva el experimento v1 y la aplicación de producción. No supone aceptación M7,
+certificación Netflix ni eficacia real demostrada; instalación aislada y corpus real
+pendiente. La implementación no autorizaba publicación; el usuario autorizó
+posteriormente commit y push de esta ampliación en la rama actual el 23/10/2026.
+Esa publicación no supone integración en main ni aceptación funcional M7.

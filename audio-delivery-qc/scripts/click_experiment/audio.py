@@ -119,21 +119,22 @@ def detect_clip(pcm, clip):
     return state.finish(), state.capped
 
 
-def score_events(pcm, issues):
+def score_events(pcm, issues, *, methods=('temporal', 'prediction'), windows=WINDOWS_MS):
     rows = []
     for issue_index, issue in enumerate(issues):
         if issue.event_type != 'POSSIBLE CLICK / TICK': continue
         for event in issue.channel_events:
             first, end = event.cluster_first_sample, event.cluster_last_sample + 1
             scores = {}
-            for window in WINDOWS_MS:
+            for window in windows if methods else ():
                 radius = round(pcm.rate * window / 1000)
                 if first - radius < pcm.start or end + radius > pcm.end or end - first > pcm.rate * .02:
                     result = {m: {'score': None, 'reason': 'insufficient_context_or_long_cluster'}
-                              for m in ('temporal', 'prediction')}
+                              for m in methods}
                 else:
                     x = pcm.read(first - radius, end + radius)[:, event.channel - 1]
-                    result = score_context(x[:radius], x[radius:radius + end-first], x[radius + end-first:], pcm.rate)
+                    result = score_context(x[:radius], x[radius:radius + end-first], x[radius + end-first:], pcm.rate,
+                                           methods=methods)
                 scores[str(window)] = result
             rows.append({'id': f'{issue_index + 1}:{event.channel}', 'issue_index': issue_index,
                          'sample_index': event.sample_index, 'channel': event.channel,

@@ -139,3 +139,262 @@ evaluación real pendiente. Decisiones de alcance: rama conservada y sin commits
 métricas por canal (no defectos únicos); límites de fragmento explícitos (material
 más largo exige dividir intervalos sin solapar). No quedan observaciones menores
 diferidas de la revisión independiente.
+
+## Comparación independiente con Essentia — protocolo v2
+
+Ampliación aprobada el 22/10/2026, implementación/validación local el 23/10.
+Se conserva el recorrido v1 anterior; `--essentia` activa un experimento distinto
+(JSON experimental schema 2), no cambia los informes ni el detector de producción.
+No implementa/acepta M7 ni modifica M5/M6, GUI, presets, política QC o dropouts.
+
+### Objetivo y etiquetas
+
+Se comparan baseline `low`, baseline+confirmador temporal, baseline+predicción
+bidireccional y Essentia independiente. Los confirmadores solo eliminan candidatos;
+Essentia recorre TODOS los samples de cada intervalo/canal y puede detectar omisiones.
+La unidad sigue siendo el evento por canal físico; issues de archivo/programa no
+se suman a esos recuentos. Se conserva la agrupación canónica de 1 ms.
+
+Usar [la plantilla schema 2](examples/click_detector_comparison.yaml), fuera de Git.
+Conserva todos los campos y tipos v1 y requiere por anotación:
+
+- `qc_disposition`: `reject`, `acceptable` o `uncertain`.
+- `basis`: `operator` o `documented_rejection`.
+
+`kind` sigue describiendo el sonido: `technical_click`, `intentional_transient`,
+`uncertain`. Un click técnico/vocal confirmado puede ser aceptable; un transitorio
+intencionado no se etiqueta como click rechazable. Una duda sigue siendo dudosa.
+`documented_rejection` indica evidencia profesional de rechazo, no certificación
+automática de Netflix. Los documentos privados que la sustentan permanecen locales.
+
+Se mantienen dos evaluaciones: todos los clicks técnicos y el subconjunto motivo
+de rechazo. La decisión experimental usa este último; no genera FAIL de producción.
+La referencia inicial aprobada es el criterio del operador. Las
+[directrices Netflix para doblaje](https://partnerhelp.netflixstudios.com/hc/en-us/articles/11220839130771-Dubbing-Creative-Guidelines-Films-Series-English)
+incluyen contexto interpretativo; no equivalen a un umbral numérico universal para
+Print Masters. Essentia no reconoce intención artística ni gravedad contractual.
+
+Anotar intervalos completos, también clicks que la baseline omita. Incluir Foley,
+pasos, armas, golpes, percusión, consonantes y dudas. `reviewed: true` afirma escucha
+completa; etiquetar solo issues previos no permite recall. Candidatos nuevos sin
+etiqueta quedan `unclassified`: no se convierten automáticamente en falsas alarmas.
+La revisión de dudas/no clasificados requiere escucha; no ajustar parámetros con
+la reserva ni convertirla en development después de verla.
+
+### Instalación opcional y reproducible
+
+Entorno comprobado: Apple Silicon, macOS 26.5.2, CPython 3.14.8, NumPy 2.5.3,
+PyYAML 6.0.3, Essentia `2.1b6.dev1438`, `six` 1.17.0. El wheel ARM64 exige macOS 15+;
+la distribución seleccionada no incluye wheel Python 3.11. La aplicación mantiene
+su compatibilidad y sus dependencias originales; Essentia no se añade a pyproject.
+No se instala nada al importar el experimento ni al ejecutar tests.
+
+Solo tras autorización, crear un venv independiente y usar el
+[lock ARM64](../scripts/click_experiment/requirements-essentia-macos-arm64.txt):
+
+```sh
+python3.14 -m venv /ruta/entorno-experimental
+/ruta/entorno-experimental/bin/python -m pip install --only-binary=:all: --require-hashes \
+  -r scripts/click_experiment/requirements-essentia-macos-arm64.txt \
+  --report /ruta/instalacion-essentia.json
+PYTHONPATH=src /ruta/entorno-experimental/bin/python scripts/evaluate_clicks.py \
+  --essentia --manifest /ruta/corpus.yaml --output /ruta/resultados-nuevos
+```
+
+Comandos desde `audio-delivery-qc/`. Rutas con espacios deben ir entre comillas.
+No se instala el proyecto en el venv: `PYTHONPATH=src` selecciona este checkout.
+El experimento usa workers secuenciales POSIX (macOS/Linux), no `--jobs`; Windows
+se rechaza explícitamente. Linux/3.11 no están validados para esta integración.
+No intentar compilación, Rosetta o sustituciones del entorno principal si falla
+el binario: documentar el bloqueo y aprobar otra vía antes de continuar.
+
+El entorno de esta sesión quedó en `/private/tmp/xqc-essentia-20261022-gDsb3A/venv`;
+su registro de instalación hermano `install.json` conserva hashes y versiones.
+Es temporal y puede ser eliminado por el sistema. La aplicación `.venv` conserva
+NumPy/PyYAML originales y no tiene Essentia instalado.
+
+### Adaptador y precisión
+
+Se reutiliza PCMClip/FFmpeg con atrim entero, sin MonoLoader, downmix, normalización,
+remuestreo ni cambios a fuentes/BWF. Una instancia por canal/fragmento. El análisis
+de Essentia usa float32: PCM24 normalizado se representa exactamente; PCM32/float64
+puede redondearse en memoria, sin modificar la fuente. No se promete identidad
+bit a bit de los cálculos entre formatos de mayor precisión.
+
+Frames de 512 muestras, hop 256, LPC orden 12, estimación de potencia 10 y umbral
+de silencio −50; solo se exploran `detectionThreshold` 20/30/40 dB en development.
+El sample rate es el original, explícito. No son umbrales QC ni calibration Netflix.
+Cada frame es dueño de su hop central. Se usa contexto real disponible, padding
+solo fuera de la fuente, grilla global en muestras y recorte al intervalo evaluado.
+
+El binding devuelve segundos float32 relativos a su contador de frames, con extremo
+final inclusivo. Se convierte al sample local verificando round-trip y resolución
+inferior a una muestra, se suma el origen entero y se transforma a `[inicio, fin)`.
+Un origen de archivo grande nunca pasa por float32. Las salidas crudas y su origen
+se conservan en JSONL; el representante consolidado conserva sus mediciones.
+La precisión de coordenadas no prueba que el detector delimite perfectamente el
+defecto: LPC puede ensanchar el intervalo alrededor de un impulso.
+
+Ruling: se usa `_essentia.Algorithm('ClickDetector')`, encapsulado y fijado a la
+versión verificada. `essentia.standard` construye todos los algoritmos al importar
+y tardó ~39 s en una comprobación local; el binding específico funcionó sin esa
+inicialización general. Al ser una API de bajo nivel, una nueva versión exige
+revalidar el adaptador. Tests reales comprueban salidas, silencio y estado por canal.
+
+Fuentes técnicas consultadas:
+[referencia](https://essentia.upf.edu/reference/std_ClickDetector.html),
+[tutorial](https://essentia.upf.edu/tutorial_audioproblems_clickdetector.html),
+[código C++](https://github.com/MTG/essentia/blob/master/src/algorithms/audioproblems/clickdetector.cpp).
+El runtime registra hashes del binding/binario y versiones; no presume que master
+sea idéntico al wheel instalado.
+
+### Límites, selección y métricas
+
+Se conservan los máximos de 60 s, 200 fragmentos, 2.000 anotaciones/fragmento y
+128 MiB de spool PCM. Essentia entrega frames pequeños; no se carga el master.
+El cap de 1.000 issues se aplica después de consolidación intra/cross-channel,
+usando la misma construcción que producción. Un segundo límite explícito de
+100.000 salidas crudas por variante/fragmento protege el JSONL: alcanzarlo marca
+cobertura truncada, aunque exista un solo issue. Nunca equivale a inspección completa.
+Cada worker tiene deadline de 300 s; timeout/cancelación terminan su grupo de
+procesos. FFmpeg puede decodificar desde el principio para atrim sample-accurate:
+el coste de fragmentos tardíos de un master largo puede ser considerable.
+
+La selección usa solo development, preferentemente real. Se congelan parámetros,
+grid, baseline, hashes de código, versión de Essentia y hash del manifiesto antes
+de analizar validation. No se elige el ganador con los resultados de la reserva.
+Si una familia no tiene variante elegible, se ejecuta una configuración diagnóstica
+fija (Essentia 30; confirmador 25 ms/4), se declara y no se acepta su eficacia.
+
+Se reportan TP, FP, FN, precision, recall, retención emparejada, nuevas detecciones,
+omisiones, duplicados, dudas y no clasificados. El matching uno-a-uno mantiene la
+tolerancia inclusiva de 1 ms y el canal físico; clases incompatibles en tolerancia
+quedan no clasificadas. Las tasas usan unión de intervalos por fuente y por canal;
+no duplican horas al evaluar canales de un mismo archivo en entradas distintas.
+Cobertura incompleta/error/no clasificados dejan precision/recall/tasas no evaluables,
+conservando los recuentos parciales. Dudas se excluyen y cuentan aparte.
+
+`VIABLE` por método requiere reserva real suficiente (mínimo 20 rechazos detectados
+por baseline, 20 falsas alarmas y dos programas), cero pérdidas emparejadas de
+rechazos baseline, cero rechazos anotados omitidos y ≥50 % menos falsas alarmas.
+El mínimo es una puerta experimental, no una garantía estadística profesional.
+Errores, truncamiento, cambios de fuentes/código/etiquetas o calibración insuficiente
+impiden aceptar. Datos sintéticos nunca certifican eficacia. Este criterio v2 no
+reescribe el histórico de retención ≥90 % del experimento v1.
+
+Tiempo/RSS se miden en procesos frescos por método/fragmento. La memoria incluye
+C++/NumPy/Python; el pico del hijo FFmpeg/ffprobe se informa aparte, no se suma como
+si fuera un máximo simultáneo. Para confirmadores se declara dependencia baseline
+y tiempo total secuencial de ambos pasos. Development incluye toda la grid;
+validation solo la variante congelada. No confundir esos costes.
+
+HTML/JSON/CSV muestran cada método y programa, posiciones/provenance, límites y
+enlaces locales de evidencia, incluidos eventos propios de Essentia. Se reutiliza
+el exportador multicanal original; ventanas idénticas baseline/Essentia dentro de
+un fragmento comparten evidencia. Se preservan canales, orden y amplitud.
+`EXPERIMENT_COMPLETE.json` significa entrega del experimento, nunca PASS acústico.
+Fallos de reporte dejan `EXPERIMENT_ERROR.json` si el disco lo permite, sin marcador
+de finalización. Fuentes se verifican con SHA-256, tamaño y mtime antes/después.
+
+### Licencia y distribución pendiente
+
+El wheel declara AGPL-3.0-only. UPF ofrece una vía comercial; antes de distribuir
+habría que revisar obligaciones del producto y bibliotecas incluidas. La separación
+en un subprocess no demuestra por sí sola exención de obligaciones. Una licencia
+UPF tampoco cubre automáticamente derechos de todas las dependencias.
+[Información oficial de licencias](https://essentia.upf.edu/licensing_information.html).
+No se descargan modelos; sus licencias son otro asunto. La instalación experimental
+no autoriza distribución ni integración en producción. Solo se consultaron fuentes
+públicas y descargaron paquetes; no se transmitió audio o documentación privada.
+
+### Validación v2 — 23/10/2026
+
+Estado de partida/final: rama `codex/m6-programme-measurement`, HEAD
+`2bf68add64fed03e82b4d18c013efef75470ae60`. Árbol inicialmente limpio; cambios de
+esta ampliación sin commit ni push. No se han cambiado ramas/referencias Git.
+Código `src/audio_qc/`, presets, pyproject y workflow CI sin cambios; hashes de
+baseline experimental comprobados de nuevo. Resultados anteriores siguen históricos.
+
+Registro de ejecución del plan aprobado:
+
+1. Instalación aislada y prueba real del binding completadas. `pip check` sin
+   requisitos rotos; el lock reproduce los hashes descargados. `.venv` de la app
+   sigue sin Essentia y conserva NumPy 2.5.3 / PyYAML 6.0.3.
+2. Adaptador, etiquetas y métricas: tests inicialmente fallidos por APIs ausentes
+   y schema no admitido, seguidos de implementación y resultados satisfactorios.
+   Se comprobó separación de temporales/predicción sin ejecutar el segundo dentro
+   de la medición del primero. Clock local de 60 s probado a 48/192 kHz y origen
+   entero `2**54+7`, sin pérdida de coordenadas.
+3. Workers, congelación, informes y fallos: pruebas de timeout/reap, fallo nativo,
+   evidencia/disco y permisos de reporte; no generan aceptación ni pierden los
+   resultados baseline disponibles. Integridad y cap permanecen visibles.
+4. Revisión independiente: detectó la ruta accidental schema 2 → aceptación
+   legacy 90 %. Se añadió una prueba que falló, guardia de modo/schema y repetición
+   satisfactoria. También se aclararon `elapsed` (ejecución) y `wall` (arranque e
+   imports incluidos), con tiempo del pipeline de cada confirmador. El revisor
+   no encontró otros defectos importantes; la documentación fue comprobada localmente.
+
+Rulings: v1 se conserva y v2 exige `--essentia`; API de bajo nivel fijada (una
+actualización de Essentia exige revalidación); cap de JSONL separado y explícito
+(puede impedir evaluar clips extremadamente densos); fallback diagnóstico no
+calibrado cuando no existe selección elegible (no puede convertirse en VIABLE).
+No quedan observaciones menores diferidas de la revisión.
+
+Comandos de pruebas, desde `audio-delivery-qc/`:
+
+```sh
+XQC_ESSENTIA_PYTHON=/private/tmp/xqc-essentia-20261022-gDsb3A/venv/bin/python \
+  .venv/bin/python -m pytest -q tests/test_click_experiment.py \
+  tests/test_essentia_experiment.py tests/test_essentia_runtime.py --tb=short
+# 52 passed in 17.66s
+
+QT_QPA_PLATFORM=offscreen \
+XQC_ESSENTIA_PYTHON=/private/tmp/xqc-essentia-20261022-gDsb3A/venv/bin/python \
+  .venv/bin/python -m pytest -q --tb=short
+# 742 passed in 57.04s; 0 failed, 0 skipped
+```
+
+La variable permite a los tests usar el intérprete aislado. Si falta, solo los
+nuevos tests del binario opcional se omiten explícitamente; eso no verifica Essentia.
+No se desactivó ninguna prueba existente. No se ejecutó CI remota ni Python 3.11/Linux.
+
+Smoke CLI real (audio sintético): tres fuentes PCM24/BWF 48 kHz, stereo/stereo/seis
+canales, tres programas, 3 s cada uno, TimeReference 172800000. Incluye impulso,
+control etiquetado intencionado y salto permanente de señal que la baseline omite.
+Los controles son artificiales y no prueban discriminación de Foley o diálogo.
+
+```sh
+PYTHONPATH=src /private/tmp/xqc-essentia-20261022-gDsb3A/venv/bin/python \
+  scripts/evaluate_clicks.py --essentia \
+  --manifest reports/essentia-20261023-smoke/corpus.yaml \
+  --output reports/essentia-20261023-smoke/comparison
+# INSUFFICIENT_EVIDENCE; exit 3
+```
+
+Rutas locales ignoradas por Git; repetir requiere un destino nuevo. Reserva sintética:
+
+| Método | TP rechazo | FP conocidos | FN rechazo | Sin clasificar |
+| --- | ---: | ---: | ---: | ---: |
+| Baseline | 2 | 2 | 2 | 0 |
+| Temporal | 2 | 2 | 2 | 0 |
+| Predicción | 2 | 2 | 2 | 0 |
+| Essentia | 4 | 2 | 0 | 2 |
+
+Los dos candidatos adicionales no clasificados de Essentia están en el final de
+las fuentes. Precision/recall completos de Essentia quedan null; no se han cambiado
+las etiquetas para mejorar el resultado. Todos los métodos alternativos usaron
+fallback diagnóstico explícito por falta de selección elegible. No hubo reducción
+de falsas alarmas conocidas, corpus real ni evidencia suficiente para aceptación.
+
+Verificados SHA-256/tamaño/mtime intactos en las tres fuentes; cuatro snippets
+distintos del caso de seis canales comparados muestra a muestra contra el rango
+original: igualdad de amplitud y orden, 48 kHz/seis canales. El contexto efectivo
+del exportador es 1 s antes/después. Enlaces HTML locales existentes con escaping,
+`target="_blank" rel="noopener"`. Plantilla validada; enlaces documentales y
+`git diff --check` correctos. La CLI sin dependencia opcional sale con código 2,
+sin instalar ni crear salida. No se ha realizado escucha real ni validación en DAW.
+
+Pendiente: corpus real exhaustivo y separación por programas, juicio de rechazo
+del operador, reserva independiente y eventual revisión de licencia antes de una
+distribución. Esta tarea prepara la evaluación; no demuestra mejora perceptiva ni
+autoriza integración en producción.

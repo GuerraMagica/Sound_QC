@@ -1,0 +1,6 @@
+# Optional experiment ONLY: CPython 3.14, macOS 15+, ARM64. Never install into the app .venv.
+# Use --only-binary=:all: --require-hashes. Other platforms need their own reviewed lock.
+essentia==2.1b6.dev1438 --hash=sha256:3a4a51f7b59d76b9beb9a1aacdaa9b9c0de89f14b02ab45050f86230241044c5
+numpy==2.5.3 --hash=sha256:adc1ada2662f8a5f960b8a10d9986897e7499ef07e06d4cfe7197f8cce923c07
+PyYAML==6.0.3 --hash=sha256:34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310
+six==1.17.0 --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274
