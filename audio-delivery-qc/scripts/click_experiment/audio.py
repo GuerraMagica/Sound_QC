@@ -9,6 +9,7 @@ import numpy as np
 from audio_qc.config import load_config
 from audio_qc.defects import detect_window
 from audio_qc.issues import IssueConsolidator
+from audio_qc.hashing import source_signature, source_identity_error
 from audio_qc.metadata import inspect_metadata
 from audio_qc.models import AudioFile
 from audio_qc.process import ffmpeg_input, stream_process
@@ -51,6 +52,7 @@ class PCMClip:
         self.clip, self.handle = clip, None
 
     def __enter__(self):
+        self.source_signature = source_signature(self.clip['file'])
         audio = AudioFile(self.clip['file'], Path(self.clip['file']).name)
         inspect_metadata(Path(audio.path), audio)
         if audio.sample_rate != self.clip['sample_rate'] or audio.channels not in (1, 2, 6):
@@ -83,6 +85,9 @@ class PCMClip:
             if self.end < self.clip['end_sample']:
                 raise ValueError('Evaluation range exceeds exact decoded source samples')
             self.handle.flush()
+            error = source_identity_error(self.clip['file'], self.source_signature)
+            if error:
+                raise ValueError(error)
             return self
         except BaseException:
             self.handle.close()

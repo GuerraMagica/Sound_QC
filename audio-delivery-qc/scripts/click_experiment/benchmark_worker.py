@@ -27,6 +27,7 @@ def execute(job):
     result = {'variants': {}, 'error': None, 'clip': clip}
     try:
         with PCMClip(clip) as pcm:
+            result['source_signature'] = pcm.source_signature
             if family == 'baseline':
                 issues, capped = detect_clip(pcm, clip)
                 result['variants']['baseline'] = dict(events=score_events(pcm, issues, methods=()),

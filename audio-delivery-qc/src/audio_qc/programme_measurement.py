@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .hashing import source_signature
 from .models import MeasurementOutcome, MeasurementState as MS, OperationalDiagnostic
 from .process import ToolError
 from .programme import LAYOUTS
@@ -34,11 +35,6 @@ class ProgrammeMeasurement:
     measurement_outcomes: dict = field(default_factory=dict)
     operational_diagnostics: list[OperationalDiagnostic] = field(default_factory=list)
     provenance: dict = field(default_factory=dict)
-
-
-def source_signature(path):
-    stat = Path(path).stat()
-    return stat.st_size, stat.st_mtime_ns, stat.st_ino
 
 
 def programme_eligibility(group, files, signatures):

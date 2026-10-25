@@ -55,6 +55,9 @@ def normalized(audio, folder):
     result.pop('execution_status')
     result.pop('measurement_outcomes')
     result.pop('operational_diagnostics')
+    signature = result['metadata'].pop('source_signature')
+    stat = Path(audio.path).stat()
+    assert signature == [stat.st_size, stat.st_mtime_ns, stat.st_ino]
     # Additive header/probe provenance was not present in the M3 snapshot.
     # Validate it separately; retain every original fact and check unchanged.
     if 'wave_format' in result['bwf']:

@@ -298,6 +298,18 @@ Offsets and full-precision timestamps are relative to file start; sample indices
 
 `--export-defect-snippets` writes one WAV per consolidated issue in `defect_snippets/` inside the report folder: one second before the full issue's first sample and one second after its last sample, clipped to source boundaries. A 5.1 issue affecting channels 1, 2 and 5 produces one six-channel snippet, preserving original channel count/order, rate and gain without downmixing. Evidence is converted to 32-bit float (high-resolution formats may have representational rounding). It does not inherit BWF metadata. Clicking an Evidence WAV link requests a new tab/window using `target="_blank" rel="noopener"`; local relative paths and the report CSP are retained. Browser settings may instead download the WAV; use a DAW/player if the browser cannot play multichannel float WAV. See `M31_VALIDATION.md` for consolidation and evidence validation.
 
+Evidence export checks the source's size, nanosecond modification time and inode
+against the checkpoint captured before analysis, before and after each FFmpeg
+export (also on failure/cancellation). JSON preserves this checkpoint as
+`metadata.source_signature`. A missing checkpoint, inaccessible source or detected
+change blocks all evidence links for that source with `snippet_source_changed`.
+Completed measurements and acoustic findings remain available; the failure is
+operational (CLI exit 2), not a new acoustic defect. Already written snippets may
+remain for diagnosis but are not linked as trusted evidence. Rescan a stable copy.
+These bounded stat checks do not lock the source or detect every content change
+if filesystem attributes are restored between checkpoints. They do not add a
+full-source hash/decode per snippet. Use stable, read-only delivery media.
+
 ## Continuous integration and dependency audit
 
 The repository-root `.github/workflows/tests.yml` runs the complete suite on pushes and pull requests, with Python 3.11 and 3.14 on Ubuntu 24.04. It installs FFmpeg/ffprobe and PySide6 and runs the GUI tests offscreen. Synthetic WAVs are generated during tests; professional source media is not uploaded. Workflow permissions are read-only, checkout credentials are not persisted, and the official checkout/setup-python actions are pinned to commit hashes.

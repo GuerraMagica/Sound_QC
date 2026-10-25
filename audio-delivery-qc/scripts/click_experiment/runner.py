@@ -68,6 +68,7 @@ def analyze_clip(clip, output, index):
     record = {'clip': clip, 'events': [], 'issues': [], 'capped': False, 'error': None}
     try:
         with PCMClip(clip) as pcm:
+            record['source_signature'] = pcm.source_signature
             issues, capped = detect_clip(pcm, clip)
             record.update(events=score_events(pcm, issues), issues=[asdict(i) for i in issues],
                           capped=capped, channels=pcm.channels)
@@ -116,6 +117,7 @@ def evidence_for_discarded(record, selected, output, index):
     from audio_qc.models import Defect, DefectIssue
     audio = AudioFile(record['clip']['file'], Path(record['clip']['file']).name,
                       sample_rate=record['clip']['sample_rate'], channels=record['channels'])
+    audio.metadata['source_signature'] = record.get('source_signature')
     for i in indices:
         item = dict(record['issues'][i])
         item['channel_events'] = [Defect(**e) for e in item['channel_events']]

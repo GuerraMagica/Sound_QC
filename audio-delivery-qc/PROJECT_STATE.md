@@ -1,6 +1,6 @@
 # XQC — estado vigente
 
-Actualización documental: **24 de octubre de 2026**. Este documento sintetiza la
+Actualización documental: **25 de octubre de 2026**. Este documento sintetiza la
 baseline observada y las decisiones del usuario; no es una nueva certificación QC.
 
 ## 1. Identificación del proyecto
@@ -280,3 +280,43 @@ de fuentes durante snippets y la decisión sobre cobertura truncada siguen
 pendientes; no forman parte de esta corrección. No se instalaron dependencias,
 crearon ramas ni realizaron commits/pushes. El cambio previo de bit depth y el
 mapa local se conservan; el mapa no se ha actualizado.
+
+## Protección de identidad en evidencia — 25/10/2026
+
+Alcance aprobado: verificar la fuente antes/durante la fase de exportación,
+bloquear evidencia afectada, conservar mediciones con diagnóstico operativo y
+validar con fixtures sintéticos y regresión completa. Sin cambios a detectores,
+umbrales, política de cobertura ni funcionalidades M5/M6.
+
+`scanner` conserva en `metadata.source_signature` el tamaño, mtime en nanosegundos
+e inode anteriores al análisis. `snippets` compara esa identidad antes/después
+de cada exportación, incluso si falla o se cancela. Cambios o imposibilidad de
+verificación retiran todos los enlaces de esa fuente y generan el diagnóstico
+operativo obligatorio `snippet_source_changed`; no inventan un defecto acústico.
+Los archivos de evidencia ya escritos pueden quedar sin enlaces para diagnóstico.
+El experimento v1/v2 propaga la misma identidad; registros antiguos sin ella
+requieren reanalizar antes de exportar. No se regeneran golden fixtures.
+
+Limitación: comprobaciones stat acotadas, sin lock ni hash completo por snippet;
+no garantizan detectar modificaciones cuyos atributos se restauren entre puntos
+de control. Las fuentes deben permanecer estables. GUI manual/DAW y el runtime
+opcional de Essentia no se certifican con esta modificación.
+
+Validación local de esta corrección (macOS ARM64, Python 3.14.8, FFmpeg 9.0.2):
+16 casos nuevos para cambio de tamaño/mtime/inode, fuente ausente o no verificable,
+exportación con error/cancelación, retirada de enlaces previos, CLI/HTML y ambos
+exportadores experimentales. Los primeros 12 casos fallaron antes de implementar
+la protección. Conjunto focalizado final: **124 aprobadas** (17,50 s).
+Suite completa: **797 aprobadas, 0 fallidas, 8 omitidas** (47,99 s);
+omisiones del runtime Essentia opcional sin `XQC_ESSENTIA_PYTHON`.
+
+```sh
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q tests/test_snippet_source_identity.py tests/test_issue_evidence.py tests/test_policy_baseline.py tests/test_click_experiment.py tests/test_essentia_experiment.py tests/test_hotfix_acceptance.py tests/test_recovery_boundaries.py
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q
+```
+
+Estado al cerrar la validación local: cambios sobre
+`a12ae2193d66083eb672f740177ae103ca881ff3`, todavía sin commit/push ni CI remota
+de esta corrección. El usuario autorizó posteriormente su publicación. `graphify-out/`
+preexistente conservado sin modificar. Sin dependencias nuevas ni cambios de rama.
+`git diff --check` sin errores. Revisión final de código sin hallazgos bloqueantes.

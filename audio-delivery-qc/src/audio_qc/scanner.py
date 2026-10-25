@@ -151,6 +151,10 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
                     audio.operational(metric, outcome.reason)
     except Exception as exc:
         audio.operational("inspection", str(exc), required=True, affects_analysis=True)
+    finally:
+        # Metadata parsing replaces the metadata dict. Keep the pre-analysis
+        # checkpoint, including on cancellation, rather than sampling it anew.
+        audio.metadata["source_signature"] = context.source_signature
     if requirements.hash:
         try:
             audio.sha256 = sha256_file(path, phase("SHA-256"), **({"cancel": cancel} if cancel else {}))

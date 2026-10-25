@@ -152,6 +152,9 @@ def export_evidence(output, clips, selected):
         baseline = json.loads((output/f'clip_{index:04d}_baseline.json').read_text())
         essentia = json.loads((output/f'clip_{index:04d}_essentia.json').read_text())
         audio = AudioFile(clip['file'], Path(clip['file']).name, sample_rate=clip['sample_rate'])
+        # Both detector views must refer to the same analysed source version.
+        if baseline.get('source_signature') == essentia.get('source_signature'):
+            audio.metadata['source_signature'] = baseline.get('source_signature')
         references, unique = {}, {}
         for family, record, variant in (('baseline', baseline, 'baseline'),
                                          ('essentia', essentia, key(selected['essentia']))):

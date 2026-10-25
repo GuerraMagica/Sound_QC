@@ -398,3 +398,16 @@ Pendiente: corpus real exhaustivo y separación por programas, juicio de rechazo
 del operador, reserva independiente y eventual revisión de licencia antes de una
 distribución. Esta tarea prepara la evaluación; no demuestra mejora perceptiva ni
 autoriza integración en producción.
+
+### Protección de la fuente al exportar evidencia (25/10/2026)
+
+Ambas versiones del experimento conservan `source_signature` (tamaño, mtime en
+nanosegundos e inode) desde antes de leer el PCM. El exportador común comprueba
+esa identidad antes/después de cada snippet; no toma una nueva baseline al
+exportar. V2 exige además que baseline y Essentia se refieran a la misma identidad.
+Si no puede verificarse, devuelve diagnósticos y enlaces nulos, conservando los
+resultados medidos. Registros antiguos sin ese campo requieren un nuevo análisis
+para generar evidencia; no se actualizan retrospectivamente. Los SHA-256 globales
+del experimento siguen siendo independientes y no se relajan. El control stat no
+es un bloqueo ni detecta toda modificación con atributos restaurados. No cambia
+el detector, la selección de parámetros ni los criterios de aceptación.
