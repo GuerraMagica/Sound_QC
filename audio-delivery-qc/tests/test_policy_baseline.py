@@ -55,6 +55,19 @@ def normalized(audio, folder):
     result.pop('execution_status')
     result.pop('measurement_outcomes')
     result.pop('operational_diagnostics')
+    # Additive header/probe provenance was not present in the M3 snapshot.
+    # Validate it separately; retain every original fact and check unchanged.
+    if 'wave_format' in result['bwf']:
+        header = result['bwf'].pop('wave_format')
+        assert header['bit_depth'] == result['bit_depth']
+        assert header['channels'] == result['channels']
+        assert header['sample_rate'] == result['sample_rate']
+        assert header['reason'] is None
+    if 'bit_depth_provenance' in result['metadata']:
+        provenance = result['metadata'].pop('bit_depth_provenance')
+        assert provenance['source'] == 'FFPROBE'
+        assert provenance['wave_bit_depth'] == result['bit_depth']
+        assert provenance['reason'] is None
     # M3.1 adds issue structure. These mono golden fixtures must still retain
     # every legacy value; never rewrite the pre-M3 golden data.
     for event in result['defects']:

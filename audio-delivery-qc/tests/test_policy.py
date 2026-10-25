@@ -48,7 +48,7 @@ def test_sample_rate(facts, config, rate, required, status):
 
 @pytest.mark.parametrize('field,measured,status', [('required',16,'FAIL'), ('preferred',16,'WARNING'),
                                                  ('required',24,'PASS'), ('preferred',24,'PASS'),
-                                                 ('required',None,'INFO'), ('preferred',None,'INFO')])
+                                                 ('required',None,'INCOMPLETE'), ('preferred',None,'INFO')])
 def test_bit_depth(facts, config, field, measured, status):
     facts.bit_depth = measured
     config['bit_depth'][field] = 24

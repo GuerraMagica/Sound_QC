@@ -1,6 +1,6 @@
 # XQC — estado vigente
 
-Actualización documental: **20 de octubre de 2026**. Este documento sintetiza la
+Actualización documental: **24 de octubre de 2026**. Este documento sintetiza la
 baseline observada y las decisiones del usuario; no es una nueva certificación QC.
 
 ## 1. Identificación del proyecto
@@ -205,3 +205,78 @@ certificación Netflix ni eficacia real demostrada; instalación aislada y corpu
 pendiente. La implementación no autorizaba publicación; el usuario autorizó
 posteriormente commit y push de esta ampliación en la rama actual el 23/10/2026.
 Esa publicación no supone integración en main ni aceptación funcional M7.
+
+## Respaldo de bit depth y requisito no verificable (24/10/2026)
+
+Corrección autorizada tras auditoría local: FFprobe sigue siendo la fuente inicial;
+la cabecera PCM WAV/RF64/BW64 valida o completa el dato, distinguiendo bits válidos
+de almacenamiento en WAVE_FORMAT_EXTENSIBLE. Datos contradictorios o cabeceras
+ambiguas dejan el valor desconocido. Un `bit_depth.required` desconocido produce
+`INCOMPLETE` y salida CLI 2; un valor conocido distinto sigue siendo `FAIL`.
+Sin requisito obligatorio se conserva la política de profundidad preferida.
+Se añaden hechos `bwf.wave_format` y `metadata.bit_depth_provenance` al schema 5.
+No se infiere resolución efectiva del contenido ni se modifican las fuentes.
+
+Validación local ejecutada: macOS 26.5.2 ARM64, Python 3.14.8, FFmpeg 9.0.2.
+140 pruebas focalizadas aprobadas; suite completa **767 aprobadas, 0 fallidas,
+8 omitidas** (runtime Essentia opcional, sin `XQC_ESSENTIA_PYTHON`). Se verificaron
+CLI/JSON/HTML/códigos de salida e integridad SHA-256/tamaño/mtime con WAV sintéticos.
+Los seis escenarios golden M3 conservan sus valores anteriores; se validan aparte
+los campos aditivos, sin regenerar el golden. La primera regresión detectó seis
+fallos por esas claves nuevas antes de adaptar la comparación de estructura.
+
+Comandos desde `audio-delivery-qc/`:
+
+```sh
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q tests/test_bit_depth_resolution.py tests/test_metadata.py tests/test_policy.py tests/test_policy_baseline.py tests/test_policy_separation.py tests/test_hotfix_acceptance.py tests/test_custom_reports.py
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q
+```
+
+No se ejecutó CI remota ni validación con material real. No se instalaron
+dependencias ni se hizo commit/push; esta corrección no acepta M6/M7 ni resuelve
+los otros hallazgos de recuperación/cobertura de la auditoría. El mapa Graphify
+preexistente corresponde al commit anterior y debe contrastarse con estos cambios.
+
+## Recuperación de mediciones ante interrupciones (24/10/2026)
+
+Corrección autorizada de los dos huecos de recuperación detectados en la auditoría:
+
+- Un fallo anterior a la construcción del informe conserva los archivos y programas
+  ya medidos en `QC_RECOVERY.json`, sin repetir agrupación, evaluación ni formato.
+  Las mediciones de programa se guardan antes de evaluar su cumplimiento QC.
+- Cancelar durante SHA-256 conserva también los resultados acústicos del archivo
+  en curso. El hash queda null con diagnóstico `hash_cancelled`; la evaluación
+  sigue en la política y se mantiene la comprobación de cambios externos de fuente.
+- El snapshot mínimo se identifica mediante `recovery_scope`, `INCOMPLETE`/`FAILED`.
+  Conserva definiciones de grupos pendientes, pero no reconstruye sus resultados
+  ni TC. No es un reporte completo para el renderer HTML. No se crea
+  `QC_COMPLETE.json`; códigos CLI 2 para fallo y 130 para cancelación.
+- Si el informe ya estaba construido, se conserva la recuperación existente con
+  sus resultados y alcance. La escritura sigue siendo best effort: disco lleno
+  o permisos pueden impedirla y se informa en consola.
+
+Se añaden 14 casos en `tests/test_recovery_boundaries.py`: errores antes del informe,
+conservación entre programas y antes de su evaluación, cancelación por token y
+KeyboardInterrupt al calcular el hash del primer/segundo archivo, protección de
+fuente, ausencia de mutación y fallo de escritura de recuperación. Fixtures
+sintéticos con verificación de SHA-256, tamaño y mtime; sin material de producción.
+
+Validación ejecutada en macOS 26.5.2 ARM64, Python 3.14.8, FFmpeg 9.0.2:
+**104 focalizadas aprobadas** (13,30 s), incluidas las de GUI offscreen;
+suite completa **781 aprobadas, 0 fallidas, 8 omitidas** (46,98 s). Las omisiones
+son del runtime Essentia opcional sin `XQC_ESSENTIA_PYTHON`. Se observaron los
+fallos de regresión antes de corregirlos; no se regeneraron golden fixtures.
+`git diff --check` sin errores. CI remota, GUI manual y DAW no verificadas.
+
+Comandos de validación desde `audio-delivery-qc/`:
+
+```sh
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q tests/test_recovery_boundaries.py tests/test_virtual_reports.py tests/test_hotfix_acceptance.py tests/test_operational_robustness.py tests/test_process_cancellation.py tests/test_policy_separation.py tests/test_virtual_gui.py
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q
+```
+
+No se cambian detectores, umbrales, presets ni cálculos acústicos. La protección
+de fuentes durante snippets y la decisión sobre cobertura truncada siguen
+pendientes; no forman parte de esta corrección. No se instalaron dependencias,
+crearon ramas ni realizaron commits/pushes. El cambio previo de bit depth y el
+mapa local se conservan; el mapa no se ha actualizado.

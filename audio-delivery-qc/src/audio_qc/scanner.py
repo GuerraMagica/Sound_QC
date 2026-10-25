@@ -8,11 +8,20 @@ from .loudness import measure_loudness
 from .metadata import inspect_metadata
 from .measurement import MeasurementContext, MeasurementRequirements
 from .models import AudioFile, Check, Status, MeasurementOutcome, MeasurementState as MS
-from .process import ToolError
+from .process import ToolError, ScanCancelled
 from .rules import assess_file, measurement_requirements
 from .samples import analyze_samples
 
 EXTENSIONS = {".wav", ".wave", ".bwf", ".rf64", ".bw64", ".w64", ".aif", ".aiff", ".aifc", ".flac"}
+
+
+class FileScanCancelled(ScanCancelled):
+    """Cancellation carrying completed facts, not a successful inspection."""
+
+    def __init__(self, audio, context):
+        super().__init__('Scan cancelled during SHA-256')
+        self.audio = audio
+        self.context = context
 
 
 def discover(source: Path):
@@ -45,11 +54,19 @@ def inspect_file(path: Path, config: dict, with_hash=False, progress=None, *, le
     requirements = measurement_requirements(config, with_hash)
     if level_scope == "PROGRAMME_MEMBER":
         requirements = replace(requirements, levels_required=False)
-    audio, context = measure_file(path, requirements, progress, **({"cancel": cancel} if cancel else {}))
+    interrupted = None
+    try:
+        audio, context = measure_file(path, requirements, progress, **({"cancel": cancel} if cancel else {}))
+    except FileScanCancelled as exc:
+        interrupted = exc
+        audio, context = exc.audio, exc.context
     result = assess_file(audio, config, context, level_scope=level_scope)
     _check_source_state(path, context)  # Keep the original final check after policy evaluation.
     if context.source_change_error is not None:
         result.operational("source_changed", context.source_change_error, required=True, affects_analysis=True)
+    if interrupted is not None:
+        interrupted.audio = result
+        raise interrupted
     return result
 
 
@@ -137,6 +154,10 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
     if requirements.hash:
         try:
             audio.sha256 = sha256_file(path, phase("SHA-256"), **({"cancel": cancel} if cancel else {}))
+        except KeyboardInterrupt as exc:
+            audio.operational("hash_cancelled", "SHA-256 not completed: scan cancelled", required=True)
+            _check_source_state(path, context)
+            raise FileScanCancelled(audio, context) from exc
         except OSError as exc:
             audio.operational("hash_unavailable", str(exc), required=True)
     _check_source_state(path, context)

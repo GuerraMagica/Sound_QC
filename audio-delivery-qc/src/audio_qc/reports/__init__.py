@@ -11,6 +11,42 @@ from .html_report import write_html
 from .json_report import write_json
 from .programme_report import programme_timecodes, write_group_csv
 
+SCHEMA_VERSION = 5
+
+
+def build_partial_report(source, files, checks, config, versions, elapsed,
+                         programme_groups=(), programme_settings=None, programme_definitions=()):
+    """Raw recovery only: never rerun grouping, policy, or report formatting.
+
+    This deliberately is not a renderable completed report. Retain available
+    facts, including completed programme measurements, without inventing results
+    for stages that did not finish. Navigation fields are not regenerated.
+    """
+    groups = deepcopy(list(programme_groups))
+    for group in groups:
+        if 'programme_measurement' not in group:
+            group['programme_measurement'] = {'state': 'NOT_EVALUATED'}
+        group.setdefault('programme_compliance', 'NOT_EVALUATED')
+    return {
+        'schema_version': SCHEMA_VERSION,
+        'recovery_scope': 'Available facts only; grouping, assessment or report construction may be incomplete',
+        'tool': 'AUDIO DELIVERY QC INSPECTOR', 'tool_version': __version__,
+        'scan_date': datetime.now(timezone.utc).isoformat(),
+        'source': str(source), 'elapsed_seconds': round(elapsed, 3),
+        'status': 'INCOMPLETE', 'audio_compliance': 'INCOMPLETE',
+        'execution_status': 'FAILED',
+        'compliance_scope': 'PHYSICAL_FILES_AND_PROGRAMME_LEVELS' if programme_definitions or groups else 'PHYSICAL_FILES',
+        'programme_compliance': 'NOT_EVALUATED' if programme_definitions or groups else None,
+        'programme_groups': groups,
+        'programme_definitions': [asdict(d) for d in programme_definitions],
+        'programme_group_configuration': deepcopy(programme_settings),
+        'group_checks': [asdict(c) for c in checks],
+        'files': [a.to_dict() for a in files],
+        'configuration': deepcopy(config), 'dependencies': deepcopy(versions),
+        'operational_diagnostics': [asdict(OperationalDiagnostic(
+            'analysis_incomplete', 'Scan interrupted before report construction completed', True, True))],
+    }
+
 
 def build_report(source, files, group_checks, config, versions, elapsed, operational_diagnostics=(), programme_groups=(), programme_settings=None):
     operational_diagnostics = list(operational_diagnostics)
@@ -30,7 +66,7 @@ def build_report(source, files, group_checks, config, versions, elapsed, operati
     if any(d.affects_analysis for d in diagnostics):
         compliance = Status.INCOMPLETE
     return {
-        "schema_version": 5,
+        "schema_version": SCHEMA_VERSION,
         "programme_groups": programme_timecodes(programme_groups, config["timecode"]),
         "programme_group_configuration": deepcopy(programme_settings),
         "audio_compliance": compliance.value,

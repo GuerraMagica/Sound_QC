@@ -80,6 +80,17 @@ Unexpected top-level failures return exit code 2 with a concise message instead 
 
 YAML uses the existing strict canonical validator and safe loader. Unknown keys, duplicate keys and invalid types/values are rejected before scanning; loaded YAML validation errors now include the source path and field location where available. No second configuration schema or new runtime dependency was introduced.
 
+If a scan fails before report construction, `QC_RECOVERY.json` preserves the
+available file/programme facts without retrying grouping or report formatting.
+This minimal snapshot is marked `INCOMPLETE`/`FAILED` and includes `recovery_scope`;
+it is not a complete report or input for the HTML renderer. Unbuilt groups remain
+as `programme_definitions`, and navigation timecodes are not regenerated.
+Cancelling during SHA-256 retains the current file's completed acoustic measurements
+and QC findings, with a null file hash and a `hash_cancelled` diagnostic. CLI codes
+remain 2 for operational failure and 130 for cancellation; neither creates a
+completion marker. Recovery is best effort: an unwritable/full destination can
+also prevent saving the snapshot, which is reported on the console.
+
 Processing remains sequential. Parallel jobs are deferred until their cancellation, memory bounds, source-read-only behavior and deterministic report ordering are validated. Measurement calculations, detector thresholds and QC policy are unchanged.
 
 ## Checks and scope
@@ -91,6 +102,21 @@ Processing remains sequential. Parallel jobs are deferred until their cancellati
 - RIFF/RF64/BW64 integrity; BEXT presence, unsigned 64-bit TimeReference, originator, originator reference, date/time, description, version and CodingHistory. Additional FFprobe tags remain in JSON/HTML.
 - Readability through a complete decode, not merely a header probe.
 - Group format/rate/depth differences, duration spreads/outliers, channel-count information, duplicate names, optional duplicate hashes, and possible missing stems when naming provides evidence.
+
+Bit depth normally comes from FFprobe (`bits_per_raw_sample`, then `bits_per_sample`).
+For PCM WAV/RF64/BW64, the existing bounded header inspection also validates the
+`fmt ` descriptor. It supplies missing depth and distinguishes extensible valid
+bits from container width (for example, 24 valid bits in a 32-bit container).
+Conflicting probe/header facts, invalid extensible precision, or ambiguous headers
+leave depth unavailable rather than guessing from `sample_fmt`. Float storage width
+is not interpreted as integer PCM precision. Other containers keep the FFprobe path.
+This verifies declared format, not the effective resolution of the recorded signal.
+If `bit_depth.required` is configured and depth cannot be verified, QC is
+`INCOMPLETE` and CLI returns 2; a known mismatch remains `FAIL`. A preferred depth
+alone retains its existing non-mandatory behavior.
+JSON schema 5 gains additive `bwf.wave_format` and `metadata.bit_depth_provenance`
+facts; existing audio measurements and source files are unchanged.
+Format reference: [Microsoft WAVEFORMATEXTENSIBLE](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ksmedia/ns-ksmedia-waveformatextensible).
 
 Recursive extensions: WAV, WAVE, BWF, RF64, BW64, W64, AIF, AIFF, AIFC, FLAC. Actual decoding depends on the installed FFmpeg build. Mono, stereo, 5.1 and 7.1 PCM are supported. Other immersive beds receive sample analysis where decodable; object metadata and renderer-dependent loudness are outside scope.
 

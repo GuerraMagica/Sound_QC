@@ -15,8 +15,8 @@ from .consistency import group_checks
 from .diagnostics import RunLog
 from .models import AudioFile, Check, Status, OperationalDiagnostic, overall_status
 from .process import ToolError, check_tools, CancellationToken
-from .reports import build_report, write_reports, write_recovery
-from .scanner import discover, inspect_file
+from .reports import build_report, build_partial_report, write_reports, write_recovery
+from .scanner import discover, inspect_file, FileScanCancelled
 from .snippets import export_snippets
 from .timecode import SOURCES
 from .rules import measurement_requirements, assess_programme
@@ -106,10 +106,17 @@ def main(argv=None):
                         dropping = True
         Thread(target=control, daemon=True).start()
 
+    def recovery_snapshot():
+        if report is not None:
+            return deepcopy(report)
+        return build_partial_report(source, files, checks, config, versions, time.monotonic()-started,
+                                    programmes, programme_settings, definitions)
+
     def recover(error):
-        if report is not None and output is not None:
+        if output is not None and (files or report is not None):
             try:
-                write_recovery(report, output, error)
+                write_recovery(recovery_snapshot(), output, error,
+                               diagnostic_code='report_export' if report is not None else 'scan_interrupted')
                 log.error("Available analysis saved as recovery data: %s", output / "QC_RECOVERY.json")
             except Exception:
                 logs.console_warning("Recovery data could not be saved; report delivery failed.")
@@ -119,22 +126,7 @@ def main(argv=None):
             cancel.cancel()
         if output is not None and (files or report is not None):
             try:
-                if report is not None:
-                    partial = deepcopy(report)
-                else:
-                    available_groups = deepcopy(programmes) if programmes else build_programmes(
-                        definitions, files, detection_enabled=False,
-                        cross_channel_merge_ms=config['defects']['issues']['cross_channel_merge_ms'],
-                        max_issues=config['defects']['max_candidates'])
-                    for group in available_groups:
-                        if 'programme_measurement' not in group:
-                            group.update(programme_measurement=asdict(ProgrammeMeasurement('NOT_EVALUATED')),
-                                programme_compliance='NOT_EVALUATED',
-                                level_checks=[asdict(Check('programme_cancelled', Status.INCOMPLETE,
-                                                          'Programme measurement not completed: scan cancelled'))])
-                    partial = build_report(source, files, checks, config, versions, time.monotonic()-started,
-                        [OperationalDiagnostic('cancelled', 'Scan cancelled; partial analysis only', True, True)],
-                        available_groups, programme_settings)
+                partial = recovery_snapshot()
                 if error is not None:
                     partial['operational_diagnostics'].append(asdict(OperationalDiagnostic(
                         'concurrent_operation_error', str(error), True)))
@@ -216,6 +208,9 @@ def main(argv=None):
                     pass  # Inspection records the actual unreadable-source diagnostic.
                 scope = {"level_scope": "PROGRAMME_MEMBER"} if str(path) in member_paths else {}
                 audio = inspect_file(path, config, args.hash, progress, **scope, **cancellation)
+            except FileScanCancelled as exc:
+                files.append(exc.audio)
+                raise
             except Exception as exc:
                 # Unexpected errors remain visible but cannot abort the delivery.
                 log.error("Unexpected inspection error for %s", path, exc_info=True)
@@ -265,14 +260,16 @@ def main(argv=None):
                         log.debug('Programme %s · EBU R128 · %.0f%%', group['name'], max(0, min(100, fraction*100)))
                         last_programme_progress[0] = now
                 measured = measure_programme(eligibility.input, requirements, programme_progress, **cancellation)
-            level_checks = assess_programme(measured, config)
-            group.update(programme_measurement=asdict(measured), level_checks=[asdict(c) for c in level_checks],
+            # Retain completed measurement even if the following assessment fails.
+            group.update(programme_measurement=asdict(measured),
                          measurement_eligibility={'eligible': eligibility.eligible, 'reasons': eligibility.reasons,
                                                   'warnings': eligibility.warnings},
+                         combined_programme_loudness=measured.state, combined_true_peak=measured.state)
+            level_checks = assess_programme(measured, config)
+            group.update(level_checks=[asdict(c) for c in level_checks],
                          programme_compliance=('NOT_EVALUATED' if measured.state in ('NOT_EVALUATED', 'DISABLED')
                                                else overall_status(level_checks).value),
-                         level_scope='PROGRAMME', level_policy=deepcopy({k: config[k] for k in ('loudness', 'true_peak')}),
-                         combined_programme_loudness=measured.state, combined_true_peak=measured.state)
+                         level_scope='PROGRAMME', level_policy=deepcopy({k: config[k] for k in ('loudness', 'true_peak')}))
             for diagnostic in measured.operational_diagnostics:
                 (log.error if diagnostic.required else log.warning)('Programme %s · %s', group['name'], diagnostic.message)
             log.info('Programme %s · Levels %s · %s', group['name'], group['programme_compliance'], measured.state)
@@ -304,7 +301,8 @@ def main(argv=None):
         logs.warnings()
         return 2
     except KeyboardInterrupt as exc:
-        return cancelled(exc.__context__)
+        # The interruption wrapped with preserved file facts is not a second error.
+        return cancelled(None if isinstance(exc, FileScanCancelled) else exc.__context__)
     except Exception as exc:
         if cancel and cancel.cancelled:
             return cancelled(exc)

@@ -7,6 +7,40 @@ def _text(raw: bytes) -> str:
     return raw.split(b"\0", 1)[0].decode("ascii", errors="replace").rstrip()
 
 
+def _wave_format(raw: bytes, size: int) -> dict:
+    """Bounded fmt facts for depth resolution, not a delivery policy decision."""
+    facts = {"bit_depth": None, "reason": "Truncated WAVE format header"}
+    if len(raw) < 16:
+        return facts
+    code, channels, rate, byte_rate, align, bits = struct.unpack_from("<HHIIHH", raw)
+    facts.update(format_tag=code, channels=channels, sample_rate=rate,
+                 container_bits=bits, block_align=align)
+    valid = bits
+    if code == 65534:
+        if len(raw) < 40:
+            return facts
+        extra, valid = struct.unpack_from("<HH", raw, 16)
+        facts.update(valid_bits=valid, subformat=raw[24:40].hex())
+        if extra < 22 or 18 + extra > size:
+            facts["reason"] = "Invalid WAVE extensible extension length"
+            return facts
+        # Match the complete PCM/IEEE_FLOAT GUID, not just its first word.
+        if raw[28:40] != bytes.fromhex("00001000800000aa00389b71"):
+            facts["reason"] = "Unsupported WAVE subformat GUID"
+            return facts
+        code = struct.unpack_from("<I", raw, 24)[0]
+    if code not in (1, 3):
+        facts["reason"] = "WAVE format is not supported integer/float PCM"
+    elif (not channels or not rate or bits not in (8, 16, 24, 32, 64)
+          or align != channels * (bits // 8) or byte_rate != rate * align):
+        facts["reason"] = "Inconsistent WAVE sample container, rate or block alignment"
+    elif not 0 < valid <= bits or (code == 3 and (bits not in (32, 64) or valid != bits)):
+        facts["reason"] = "Invalid or ambiguous WAVE valid-bit precision"
+    else:
+        facts.update(bit_depth=valid, encoding="float" if code == 3 else "integer", reason=None)
+    return facts
+
+
 def inspect_bwf(path: Path) -> dict:
     result = {"supported_container": False, "present": None, "time_reference": None,
               "originator": None, "origination_date": None, "origination_time": None,
@@ -27,6 +61,7 @@ def inspect_bwf(path: Path) -> dict:
         data64 = None
         size_table = {}
         data_seen = False
+        format_count = 0
         for _ in range(100000):
             pos = f.tell()
             if pos >= end:
@@ -61,7 +96,11 @@ def inspect_bwf(path: Path) -> dict:
                             key, value = struct.unpack_from("<4sQ", raw, offset)
                             size_table.setdefault(key, []).append(value)
             elif chunk == b"fmt ":
+                format_count += 1
                 raw = f.read(min(size, 40))
+                result["wave_format"] = _wave_format(raw, size)
+                if format_count > 1:
+                    result["wave_format"].update(bit_depth=None, reason="Multiple WAVE format chunks are ambiguous")
                 if len(raw) < 16:
                     result["errors"].append("Truncated format chunk")
                 else:

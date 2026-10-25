@@ -77,8 +77,13 @@ def _evaluate_file(a: AudioFile, c: dict, context: MeasurementContext, level_sco
     for rule, severity in (("required", Status.FAIL), ("preferred", Status.WARNING)):
         value = c["bit_depth"][rule]
         if value is not None:
-            add(f"bit_depth_{rule}", Status.INFO if a.bit_depth is None else severity if a.bit_depth != value else Status.PASS,
-                  f"Bit depth {a.bit_depth if a.bit_depth else 'unavailable'}; {rule} {value}")
+            if a.bit_depth is None:
+                reason = a.metadata.get('bit_depth_provenance', {}).get('reason')
+                add(f"bit_depth_{rule}", Status.INCOMPLETE if rule == "required" else Status.INFO,
+                    f"Bit depth unavailable; {rule} {value}" + (f"; {reason}" if reason else ""))
+            else:
+                add(f"bit_depth_{rule}", severity if a.bit_depth != value else Status.PASS,
+                    f"Bit depth {a.bit_depth}; {rule} {value}")
     if c["pcm"]["preferred"] and a.codec:
         add("pcm", Status.PASS if a.codec.startswith("pcm_") else Status.WARNING, f"Codec: {a.codec}; PCM preferred")
     if a.channels and c["channels"]["allowed"]:
