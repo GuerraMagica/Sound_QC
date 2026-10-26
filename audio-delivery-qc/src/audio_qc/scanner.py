@@ -117,6 +117,11 @@ def measure_file(path: Path, requirements: MeasurementRequirements, progress=Non
                 analyze_samples(path, audio, requirements, context, phase("Audio samples"), **({"cancel": cancel} if cancel else {}))
             finally:
                 sample_diagnostics()
+                if requirements.signal_loss_options is not None:
+                    complete = audio.measurements.get('signal_loss', {}).get('complete', False)
+                    audio.measurement_outcomes['signal_loss'] = MeasurementOutcome(
+                        MS.SUCCESS if complete else MS.ERROR,
+                        None if complete else 'Digital signal-loss scan did not finish')
             audio.measurement_outcomes["samples"] = MeasurementOutcome(MS.SUCCESS)
             audio.add("readability", Status.PASS, "Complete audio stream decoded successfully")
             expected = audio.bwf.get("declared_sample_frames")

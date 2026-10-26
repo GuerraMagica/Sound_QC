@@ -378,3 +378,14 @@ def test_unresolved_alignment_never_fabricates_group_positions(tmp_path, invalid
     assert group["coverage"] is None
     assert group["group_origin"] is None
     assert all(m["start_sample"] is None and m["end_sample_exclusive"] is None for m in group["members"])
+
+
+@pytest.mark.parametrize('code,status', [('signal_loss_records', Status.WARNING),
+                                        ('signal_loss_coverage', Status.INCOMPLETE)])
+def test_signal_loss_member_limit_or_failure_prevents_complete_group_coverage(tmp_path, code, status):
+    files = [audio(tmp_path, ch) for ch in ('L', 'R')]
+    files[0].add(code, status, 'Signal-loss evidence incomplete')
+    group, = build(files)
+    assert group['validation_status'] == 'VALID'
+    assert group['defect_coverage'] == 'INCOMPLETE'
+    assert code in str(group['coverage_limitations'])

@@ -44,7 +44,7 @@ def parser():
     inspect.add_argument("--hash", action="store_true", help="SHA-256 of files and decoded audio (default off)")
     toggle = inspect.add_mutually_exclusive_group()
     toggle.add_argument("--defects", action="store_true", help="Enable deterministic click/dropout candidates")
-    toggle.add_argument("--no-defects", action="store_true", help="Disable candidate detection")
+    toggle.add_argument("--no-defects", action="store_true", help="Disable click/short-drop candidates; independent signal_loss check remains configured")
     inspect.add_argument("--export-defect-snippets", action="store_true", help="Enable defects and export evidence WAVs")
     verbosity = inspect.add_mutually_exclusive_group()
     verbosity.add_argument("--quiet", action="store_true", help="Summary and errors only (also the default)")

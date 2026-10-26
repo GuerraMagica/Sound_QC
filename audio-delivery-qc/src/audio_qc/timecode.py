@@ -154,6 +154,12 @@ def file_timecode(audio, settings):
             tc, day, offset = None, None, None
         event.update(timecode=tc, timecode_frame_rate=rate.label, timecode_basis=basis,
                      file_start_timecode=start_tc, timecode_day_offset=day, offset=offset)
+        end = event['measurements'].get('end_sample_exclusive')
+        if valid_rate and type(end) is int and end >= 0:
+            end_frame = (manual_frame + sample_frame(end, audio.sample_rate, rate) if manual_frame is not None
+                         else sample_frame(start_sample + end, audio.sample_rate, rate))
+            event['end_timecode_exclusive'] = format_frame(end_frame, rate)
+            event['end_timecode_day_offset'] = end_frame // rate.frames_per_day
         for channel_event in event.get("channel_events", []):
             enrich(channel_event)
 

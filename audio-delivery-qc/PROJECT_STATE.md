@@ -1,6 +1,6 @@
 # XQC — estado vigente
 
-Actualización documental: **25 de octubre de 2026**. Este documento sintetiza la
+Actualización documental: **26 de octubre de 2026**. Este documento sintetiza la
 baseline observada y las decisiones del usuario; no es una nueva certificación QC.
 
 ## 1. Identificación del proyecto
@@ -320,3 +320,110 @@ Estado al cerrar la validación local: cambios sobre
 de esta corrección. El usuario autorizó posteriormente su publicación. `graphify-out/`
 preexistente conservado sin modificar. Sin dependencias nuevas ni cambios de rama.
 `git diff --check` sin errores. Revisión final de código sin hallazgos bloqueantes.
+
+## Previsualización de grupos asíncrona — 26/10/2026
+
+[Plan aprobado](docs/superpowers/plans/2026-10-25-responsive-group-preview.md)
+el 25/10. Cambios locales sobre `f1ba7233fbf9d711a806691ad063080cc41fe607`:
+
+- `group_preview.py` ejecuta el descubrimiento canónico en un auxiliar Python
+  local de solo lectura, sin decodificar audio ni evaluar cumplimiento.
+- `group_preview_gui.py` gestiona un QProcess y una única solicitud pendiente:
+  la más reciente. Snapshot de fuente/settings, debounce de 150 ms e IDs de
+  solicitud evitan mostrar resultados de una selección antigua.
+- `gui_window.py` muestra «Buscando archivos…», cancela al cambiar selección,
+  desactivar grupos o iniciar QC, y espera el cierre del auxiliar sin bloquear
+  el event loop. El escaneo mantiene su proceso/configuración independientes.
+- Errores de acceso se distinguen de ausencia de grupos; salidas grandes se
+  abrevian con aviso, conservando el total. Límites: solicitud de 4 MiB,
+  256 KiB de salida retenida por canal y 16 Ki caracteres de texto más avisos.
+  El límite de caracteres contempla pares sustitutos JSON de Unicode no BMP.
+
+La revisión independiente parcial encontró el caso Unicode no BMP: dos pruebas
+lo reprodujeron (respuesta de 383.747 bytes y error visible en GUI). Se corrigió
+el presupuesto de texto y se volvió a validar. La revisión delegada se interrumpió
+por límite de uso; no se presenta como una revisión independiente completa.
+
+Validación local final el 26/10 (macOS ARM64, Python 3.14.8, FFmpeg 9.0.2):
+**164 pruebas focalizadas aprobadas** (12,70 s), suite completa **828 aprobadas,
+0 fallidas y 8 omitidas** (55,14 s). Las omisiones son del runtime opcional
+Essentia sin `XQC_ESSENTIA_PYTHON`. Se añaden 31 casos, incluidos procesos Qt
+reales controlados mediante barreras, fallo de arranque/salida, cancelación con
+escalada, cierre, respuestas tardías, Unicode y snapshots. El escaneo GUI/CLI
+de stereo sintético conserva SHA-256, tamaño y mtime de ambas fuentes y muestra
+el resumen final sin que la previsualización anterior lo sobrescriba.
+
+Comandos ejecutados desde `audio-delivery-qc/`:
+
+```sh
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q tests/test_group_preview.py tests/test_group_preview_gui.py tests/test_programme_gui.py tests/test_custom_gui.py tests/test_virtual_gui.py tests/test_m5_followup_gui.py tests/test_gui.py tests/test_programme.py tests/test_scanner_rules.py tests/test_custom_config.py --tb=short
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q --tb=short
+```
+
+Smoke automatizado GUI en Qt offscreen incluido en esos tests; no se ejecutó
+validación interactiva en escritorio/DAW. Diff revisado, referencias del plan
+comprobadas y `git diff --check` sin errores.
+
+No cambian descubrimiento canónico, mediciones, política, detectores, presets,
+formatos de informe ni reglas M5/M6. Se adaptaron tests/teardown para el ciclo de
+vida asíncrono. No se regeneraron golden fixtures ni se instalaron dependencias.
+`graphify-out/` se conserva sin modificar. Al cerrar esta validación todavía no se
+habían realizado commit/push ni CI de este diff.
+
+Limitaciones: Qt offscreen no certifica uso manual en discos lentos ni DAW.
+La memoria del descubrimiento conserva el coste de sus listas de rutas/grupos;
+no es constante para árboles arbitrarios. Un syscall bloqueado puede demorar la
+terminación del auxiliar. Diálogos nativos, carga YAML y comprobaciones ajenas a
+la previsualización mantienen su comportamiento anterior.
+
+## Comprobación independiente de pérdida de señal — 26/10/2026
+
+Alcance aprobado por el usuario: detectar cortes digitales prolongados y MOS
+(Missing of sound), separadamente de los clicks. El detector opcional limitaba los
+zero-dropouts a 500 ms; el contador del corte largo existía, pero la regla explícita
+de FAIL estaba desactivada. No era un fallo de decodificación ni de TC.
+
+Implementación local en `signal_loss.py`, integrada en el mismo decode por bloques:
+intervalos exactos, sin máximo de duración, categorías interior/cabecera/cola/total,
+consolidación de intervalos idénticos entre canales y memoria acotada. La política
+`signal_loss` está activa por defecto: interior ≥5 ms y canal/archivo entero a cero
+→ FAIL; extremos → INFO. El cap de clicks no interrumpe este análisis; el cap propio
+limita detalles, manteniendo el recorrido completo y los conteos de incumplimientos.
+Medición sin severidad; clasificación en `rules.py`. Un análisis obligatorio incompleto nunca PASS; el truncamiento de detalles conserva
+FAIL/WARNING y marca la cobertura de evidencia incompleta, también en los grupos.
+HTML añade una sección visible con TC inicial/final y JSON schema 5 es aditivo.
+
+Validación real local: el corte confirmado de 63,4 s fue detectado en ambos canales
+con límites de muestras exactos y resultado FAIL. SHA-256, tamaño y mtime de la
+fuente idénticos antes/después; todos los campos de medición anteriores coinciden
+con el informe original. Los informes privados permanecen fuera de Git. Persisten
+los avisos previos de máximos M/S de FFmpeg durante silencio (no obligatorios).
+
+Limitaciones: no infiere intención; también puede fallar silencio intencionado o
+un canal LFE deliberadamente vacío. Silencio de extremos es informativo; ausencia
+de diálogo bajo otra señal, ruido/dither y corrupción semántica decodificable no
+quedan cubiertos. Esto no implementa M7 ni cambia clicks, loudness, M5/M6 o sus
+algoritmos. Véase [regla y configuración](README.md#critical-digital-signal-loss--mos).
+Validación actual local (macOS arm64, Python 3.14.8, FFmpeg 9.0.2):
+- Focalizadas señal/política/grupos: **97 aprobadas**, 0 fallos (1,19 s), con
+  `QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest tests/test_signal_loss.py tests/test_programme.py tests/test_policy_separation.py -q`.
+- Suite completa: **855 aprobadas, 8 omitidas**, 0 fallos (56,30 s), con
+  `QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q`. Omisiones: runtime
+  opcional Essentia sin intérprete configurado; no se instaló ninguna dependencia.
+- `scripts/verify_hotfix_release.py --output <destino-nuevo-fuera-de-Git>`:
+  siete escenarios operativos correctos; silencio → FAIL/MOS con loudness
+  UNAVAILABLE, fallo de medición → INCOMPLETE y fallos de evidencia/informe
+  separados del cumplimiento acústico. Fuentes sintéticas intactas.
+- Escaneo CLI real con configuración histórica y nueva regla predeterminada:
+  salida 1, FAIL, ejecución COMPLETED_WITH_WARNINGS; 16 campos de medición
+  anteriores sin cambios, 45.836.160 sample frames recorridos, sin truncamiento.
+- `git diff --check` sin errores; los módulos de clicks/consolidación, loudness,
+  modelos y presets permanecen sin cambios. Golden fixtures históricos intactos.
+
+Las validaciones anteriores son históricas; estos resultados corresponden al diff
+local, no a una publicación ni CI remota. Sin validación manual DAW ni rebuild de
+app empaquetada; se conservan los cambios previos de preview GUI.
+
+Publicación de ambos cambios autorizada por el usuario el 26/10/2026 mediante
+«Push to github», en la rama de desarrollo existente. La evidencia de CI debe
+consultarse en el commit publicado; no se infiere de las pruebas locales.

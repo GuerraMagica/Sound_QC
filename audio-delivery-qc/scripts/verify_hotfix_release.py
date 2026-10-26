@@ -85,7 +85,7 @@ def verify(output, baseline_source=None):
                         ['--export-defect-snippets'])
     assert not any(c['status'] == 'FAIL' for c in evidence['checks'])
     assert len(evidence['defects']) == 1
-    silent = scenario('E_silence', paths['silent'], (0, 'WARNING', 'COMPLETED'))
+    silent = scenario('E_silence', paths['silent'], (1, 'FAIL', 'COMPLETED'))
     assert silent['measurement_outcomes']['integrated_lufs']['state'] == 'UNAVAILABLE'
     assert silent['measurements']['integrated_lufs'] is None
     scenario('F_report_error', paths['valid'], (2, 'PASS', 'FAILED'),

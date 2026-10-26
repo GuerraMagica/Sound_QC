@@ -6,6 +6,7 @@ import struct
 import numpy as np
 
 from .defects import StreamingDefects, runs
+from .signal_loss import StreamingSignalLoss
 from .measurement import MeasurementContext, MeasurementRequirements, ZeroRun
 from .process import ffmpeg_input, stream_process, ToolError
 
@@ -51,32 +52,44 @@ def analyze_samples(path, audio, requirements: MeasurementRequirements,
     upper = 1 - 2 ** (1-bits) if integer_pcm and bits and bits <= 32 else 1.0
     digest = hashlib.sha256(struct.pack("<II", rate, channels)) if requirements.hash else None
     args = ffmpeg_input(path) + ["-c:a", "pcm_f64le", "-f", "f64le", "pipe:1"]
-    with stream_process(args, requirements.timeout_seconds, **({"cancel": cancel} if cancel else {})) as output:
-        while raw := output.read(8192 * channels * 8):
-            if cancel:
-                cancel.raise_if_cancelled()
-            if len(raw) % (8*channels):
-                raise ToolError("Decoder produced an incomplete sample frame")
-            samples = np.frombuffer(raw, dtype="<f8").reshape(-1, channels)
-            if digest:
-                digest.update(raw)
-            finite = np.isfinite(samples)
-            bad_samples += int(samples.size - np.count_nonzero(finite))
-            if not np.all(finite):
-                samples = np.where(finite, samples, 0.0)
-            peak = np.maximum(peak, np.max(np.abs(samples), axis=0))
-            overloads += int(np.count_nonzero(np.abs(samples) > 1.0))
-            rail_count += np.count_nonzero((samples >= upper) | (samples <= -1.0), axis=0)
-            for ch in range(channels):
-                plus[ch].feed(samples[:, ch] >= upper, frames)
-                minus[ch].feed(samples[:, ch] <= -1.0, frames)
-                if options is not None and options["dropouts"]["enabled"]:
-                    zeros[ch].feed(samples[:, ch] == 0, frames)
-            if detector:
-                detector.feed(samples)
-            frames += len(samples)
-            if progress:
-                progress(frames / rate / audio.duration_seconds if audio.duration_seconds else 0)
+    signal_loss = (StreamingSignalLoss(rate, channels, requirements.signal_loss_options)
+                   if requirements.signal_loss_options is not None else None)
+    complete = False
+    try:
+        with stream_process(args, requirements.timeout_seconds, **({"cancel": cancel} if cancel else {})) as output:
+            while raw := output.read(8192 * channels * 8):
+                if cancel:
+                    cancel.raise_if_cancelled()
+                if len(raw) % (8*channels):
+                    raise ToolError("Decoder produced an incomplete sample frame")
+                samples = np.frombuffer(raw, dtype="<f8").reshape(-1, channels)
+                if digest:
+                    digest.update(raw)
+                if signal_loss:
+                    signal_loss.feed(samples)
+                finite = np.isfinite(samples)
+                bad_samples += int(samples.size - np.count_nonzero(finite))
+                if not np.all(finite):
+                    samples = np.where(finite, samples, 0.0)
+                peak = np.maximum(peak, np.max(np.abs(samples), axis=0))
+                overloads += int(np.count_nonzero(np.abs(samples) > 1.0))
+                rail_count += np.count_nonzero((samples >= upper) | (samples <= -1.0), axis=0)
+                for ch in range(channels):
+                    plus[ch].feed(samples[:, ch] >= upper, frames)
+                    minus[ch].feed(samples[:, ch] <= -1.0, frames)
+                    if options is not None and options["dropouts"]["enabled"]:
+                        zeros[ch].feed(samples[:, ch] == 0, frames)
+                if detector:
+                    detector.feed(samples)
+                frames += len(samples)
+                if progress:
+                    progress(frames / rate / audio.duration_seconds if audio.duration_seconds else 0)
+        complete = frames > 0
+    finally:
+        if signal_loss:
+            facts, events = signal_loss.finish(complete=complete)
+            audio.measurements['signal_loss'] = facts
+            audio.defects.extend(events)
     if frames == 0:
         raise ToolError("Audio stream decoded to zero sample frames")
     audio.decoded_duration_seconds = frames / rate
@@ -92,7 +105,7 @@ def analyze_samples(path, audio, requirements: MeasurementRequirements,
         longest_zero_run_per_channel=[z.longest for z in zeros] if options is not None else None,
     )
     if detector:
-        audio.defects = detector.finish()
+        audio.defects = detector.finish() + audio.defects
         context.defects_capped = detector.capped
     context.zero_runs = tuple(ZeroRun(z.longest, z.start) for z in zeros)
     return context

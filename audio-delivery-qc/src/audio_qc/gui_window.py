@@ -18,8 +18,8 @@ from .config import PRESETS, ConfigError, load_config, resolve_config, save_conf
 from .spec_editor import SpecificationEditor
 from .reports.specification import specification_rows
 from .timecode import RATES, SOURCES
-from .programme import load_group_settings, default_group_settings, discover_programmes
-from .scanner import discover
+from .programme import load_group_settings, default_group_settings
+from .group_preview_gui import GroupPreviewController
 
 
 class QCWindow(QMainWindow):
@@ -35,6 +35,10 @@ class QCWindow(QMainWindow):
         self._scan_config = None
         self._running = False
         self._group_settings = None
+        self._closing = False
+        self._preview = GroupPreviewController(self)
+        self._preview.result_ready.connect(self._apply_group_preview)
+        self._preview.idle.connect(self._preview_stopped)
         root = QWidget()
         self.setCentralWidget(root)
         layout = QVBoxLayout(root)
@@ -109,7 +113,7 @@ class QCWindow(QMainWindow):
         self.preset.currentTextChanged.connect(self.update_specification)
         self.update_specification()
         options = QHBoxLayout()
-        self.defects = QCheckBox("Detect defect candidates")
+        self.defects = QCheckBox("Detect click / short-drop candidates")
         self.snippets = QCheckBox("Export evidence WAVs")
         self.hashes = QCheckBox("Calculate SHA-256")
         self.snippets.toggled.connect(lambda enabled: self.defects.setChecked(True) if enabled else None)
@@ -132,7 +136,7 @@ class QCWindow(QMainWindow):
         self.group_preview.setWordWrap(True)
         self.group_preview.setTextFormat(Qt.PlainText)
         form.addWidget(self.group_preview)
-        self.source.editingFinished.connect(self.update_group_preview)
+        self.source.textChanged.connect(self.update_group_preview)
         settings_scroll = QScrollArea()
         settings_scroll.setWidgetResizable(True)
         settings_scroll.setWidget(self.settings)
@@ -200,17 +204,24 @@ class QCWindow(QMainWindow):
     def update_group_preview(self, *_):
         if not hasattr(self, "group_preview"):
             return
+        if self._running or self._closing:
+            self._preview.cancel()
+            return
         if not self.group_detection.isChecked():
+            self._preview.cancel()
             self.group_preview.setText("Programme grouping disabled")
             return
         settings = self._group_settings or default_group_settings()
-        source = Path(self.source.text()).expanduser()
-        paths = discover(source)[0] if self.source.text() and source.exists() else []
-        definitions = discover_programmes(paths, settings)
-        lines = [f"{g.name} ({g.layout}, {g.alignment}): " +
-                 ", ".join(f"{m.channel} ← {Path(m.file).name}" for m in g.members) for g in definitions]
-        self.group_preview.setText("\n".join(lines) + "\nMedia validation will run with QC." if lines else
-                                   "No naming groups found. Select source or load explicit YAML definitions.")
+        self.group_preview.setText("Buscando archivos…")
+        self._preview.request(self.source.text(), settings)
+
+    def _apply_group_preview(self, result):
+        if not self._running and not self._closing and self.group_detection.isChecked():
+            self.group_preview.setText(result['text'])
+
+    def _preview_stopped(self):
+        if self._closing:
+            self.close()
 
     def update_tc_controls(self, *_):
         manual = self.tc_source.currentText() == "MANUAL"
@@ -356,7 +367,7 @@ class QCWindow(QMainWindow):
         return args
 
     def run_qc(self):
-        if self._running or self.process.state() != QProcess.NotRunning:
+        if self._running or self._closing or self.process.state() != QProcess.NotRunning:
             return
         source = Path(self.source.text()).expanduser().absolute()
         if not self.source.text() or not source.exists():
@@ -370,6 +381,7 @@ class QCWindow(QMainWindow):
             self.status.setText(f"Configuración inválida: {exc}")
             return
         self.report_path = output / "QC_REPORT.html"
+        self._preview.cancel()
         self.log.clear()
         maximum = self._scan_config["true_peak"]["maximum"]
         self.log.appendPlainText("Scan configuration snapshot · True Peak: " +
@@ -451,5 +463,13 @@ class QCWindow(QMainWindow):
             self.status.setText("A scan is running. Keep this window open until it finishes.")
             event.ignore()
         else:
+            self._closing = True
+            self._preview.cancel()
+            if not self._preview.is_idle:
+                self.settings.setEnabled(False)
+                self.run_button.setEnabled(False)
+                self.status.setText("Cerrando… Esperando a que termine la búsqueda de grupos.")
+                event.ignore()
+                return
             self._clear_snapshot()
             event.accept()

@@ -133,6 +133,8 @@ def test_explicit_zero_fail_rule(tmp_path, config):
 @pytest.mark.integration
 @pytest.mark.parametrize("name", list(defect_signals()))
 def test_pcm_quantized_corpus(tmp_path, config, name):
+    # This corpus freezes the heuristic detector, not the independent exact-zero policy.
+    config["signal_loss"]["enabled"] = False
     config["defects"]["enabled"] = True
     a = inspect_file(write_wav(tmp_path/f"{name}.wav", defect_signals()[name]), config)
     assert bool(a.defects) == (name not in {"clean_sine", "legitimate_transient", "intentional_silence"})

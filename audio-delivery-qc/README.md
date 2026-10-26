@@ -66,7 +66,7 @@ audio-qc gui
 audio-qc inspect --help
 ```
 
-Quote paths containing spaces. `--export-defect-snippets` enables detection too. `--no-defects` overrides YAML enabling detection. `--verbose` shows per-file progress and diagnostics. Normal mode prints the summary and errors; `--quiet` explicitly selects that same concise output. The GUI requests verbose progress automatically.
+Quote paths containing spaces. `--export-defect-snippets` enables detection too. `--no-defects` disables optional click/short-drop candidates; the independent `signal_loss` check remains governed by its own configuration. `--verbose` shows per-file progress and diagnostics. Normal mode prints the summary and errors; `--quiet` explicitly selects that same concise output. The GUI requests verbose progress automatically.
 
 A timestamped report folder is created **beside** the source by default. Report dates and folder timestamps are explicitly UTC. A custom `--output` must be a **new** directory outside the scanned source folder. Existing reports are never overwritten. Nested symbolic links are skipped and reported to avoid traversal cycles; use actual source locations.
 
@@ -145,6 +145,22 @@ audio-qc inspect "/path/to/audio.wav" --config "/path/to/Especificación CUSTOM.
 GUI, YAML and CLI all use the same configuration resolver and QC policy evaluator. Run captures a private validated configuration snapshot; later edits to the original YAML cannot affect that scan. The controls and Run button are disabled until completion. JSON retains the resolved configuration in schema version **5**, and HTML displays an **Especificación efectiva** table. Defect and timecode settings remain outside the delivery editor and are retained in saved YAML. Hashing and evidence-export checkboxes remain execution options; use `--hash` and `--export-defect-snippets` for equivalent CLI runs.
 
 True Peak is an upper limit: a maximum of −6 dBTP accepts −8 and −6, and rejects −5. Loudness −14 LUFS ±1 accepts −15 through −13 under the existing numeric tolerance. Disabling Loudness with no True Peak maximum retains the existing behavior of not scheduling that FFmpeg measurement; unavailable values remain unavailable. Clipping uses the existing criterion, and allowed channel counts refer to one physical file.
+
+Programme-group preview runs in a separate local process while the GUI shows
+«Buscando archivos…». Changing the source or group settings replaces the previous
+request; disabling grouping or starting QC cancels preview work. Run QC uses its
+own configuration snapshot and canonical discovery, never an old preview result.
+Only the latest request may update the panel, and a late preview cannot replace
+the final QC summary. Closing the window stops the auxiliary asynchronously.
+Discovery errors are visible and do not mean that a delivery contains no groups.
+
+Large preview text is abbreviated explicitly; the total group count and actual QC
+inputs are preserved. Preview IPC is limited to 4 MiB per request and 256 KiB per
+output channel; a preview limit/failure does not disable QC. Discovery still has
+the existing memory cost of collecting paths/groups. Filesystem calls blocked in
+the operating system may delay process termination. Native file dialogs, loading
+YAML and other path checks outside the preview are not made asynchronous by this
+change. Preview never decodes audio or certifies media validity/compliance.
 
 M4 preserves the shipped YAML files and preset values. Strict validation now additionally rejects unsupported bit depths (supported: 8, 16, 20, 24, 32, 64), conflicting required/preferred depths, and a tolerance without a loudness target. Previously accepted files containing those settings need correction. Explicit `target_lufs: null` removes the inherited target and, unless explicitly supplied, its inherited tolerance; other explicit null requirements remain unset. See [M4_VALIDATION.md](M4_VALIDATION.md) for test results, native GUI/CLI equivalence and source-integrity checks.
 
@@ -244,6 +260,53 @@ CLI timecode flags override YAML before validation. `--timecode-source AUTO` or 
 
 `timecode.mode` and the existing `timecode.source` are equivalent YAML spellings. Use either; conflicting values are rejected before scanning. Reports retain `source` as the canonical configuration key to preserve compatibility. No new dependency is required for M1.
 
+## Critical digital signal loss / MOS
+
+MOS means **Missing of sound**. Every normal scan now checks exact digital zeros
+in every physical channel, independently of the optional click/short-drop detector.
+This runs in the existing streaming decode, with no extra audio pass. Default policy:
+
+```yaml
+signal_loss:
+  enabled: true
+  min_duration_ms: 5
+  max_events: 1000
+  fail_internal: true
+  fail_total: true
+```
+
+- Internal intervals of at least 5 ms cause **FAIL**, with **no maximum duration**.
+- A completely zero file or channel causes **FAIL**, even if shorter than 5 ms.
+- Leading/trailing silence is **INFO**, identified separately; it can be a legitimate leader/tail.
+- NaN/Inf are not converted into silence evidence. Existing nonfinite and decode
+  diagnostics remain separate; a missing/interrupted required scan cannot PASS.
+- Exact matching start/end/category intervals in one physical source share a row
+  with all affected channels. No rounded TC or overlap heuristic is used here.
+- `max_events` bounds retained critical issues, after exact cross-channel grouping.
+  Leading/trailing records have their own intrinsic bound (at most twice the channel
+  count). Even after the detail cap, analysis and category counts continue to EOF,
+  and the policy can FAIL for omitted events. Evidence coverage is explicitly
+  INCOMPLETE when records are omitted; a completed decode is not complete evidence.
+
+The always-visible HTML **Digital signal loss / MOS** section includes start/end TC
+(end exclusive), duration, channels and exact sample interval. The same events stay
+in file forensic detail. JSON schema 5 is extended additively with
+`measurements.signal_loss`, its measurement outcome, and interval/TC fields.
+Existing CSVs retain their shape. The programme view retains its existing cap and
+coverage semantics; consult the independent physical-file section for these checks.
+A short zero may also appear as a legacy heuristic candidate: these are different
+observations of the same source, not a unique global count of physical defects.
+
+This measures **digital absence**, not intent or every kind of corruption. An
+intentional internal gap or silent LFE channel will also violate the strict default
+rule. Set the corresponding `fail_*` to `false` in an explicitly appropriate YAML
+specification to retain WARNING instead; `enabled: false` disables this check.
+This does not identify missing dialogue under music, dither/noise replacing silence,
+or all semantically damaged but decodable audio. Existing container/readability
+checks remain active. No Netflix certification or audibility inference is implied.
+Re-assessment with a different minimum duration requires a new measurement; otherwise
+coverage is INCOMPLETE. Severity-only changes can reuse the measured facts.
+
 ## Measurement and QC policy architecture
 
 M3 preserves the existing presets, measurements and report schema while making measurement reusable. `load_config()` resolves every preset and override into the same validated policy shape. `rules.measurement_requirements()` projects it into execution inputs: the combined EBU R128/true-peak pass, optional defect detection and hashing, process timeout, and detector parameters. Sample analysis receives these execution inputs without delivery targets, clipping policy or the explicit zero-run failure threshold.
@@ -294,7 +357,7 @@ M3.1 groups channel events into an **issue** only within the same physical sourc
 
 Issues stay in earliest-start order. Their legacy scalar fields describe the earliest channel representative (lowest channel breaks ties); `merged_candidate_count` sums all underlying raw detections and issue bounds cover every channel event. Streaming retains at most `max_candidates` issues with at most the source channel count of forensic events each, plus bounded pending indices and the existing detector window. Long intra-channel chains update representatives/counts without retaining raw history. The cap never applies to raw detections, even within one detector window.
 
-Offsets and full-precision timestamps are relative to file start; sample indices are zero-based, and channels are one-based in source order. The separate displayed TC follows the selected BWF/file-relative/manual origin. Leading/trailing silence and context-free edge events generally produce no candidates. Intentional short edits/percussion can trigger warnings; noise can conceal defects. Events beyond configured durations and subjective audibility remain limitations. Default candidates are WARNING; only an explicitly configured exact zero-run rule can fail.
+Offsets and full-precision timestamps are relative to file start; sample indices are zero-based, and channels are one-based in source order. The separate displayed TC follows the selected BWF/file-relative/manual origin. Leading/trailing silence and context-free edge events generally produce no candidates. Intentional short edits/percussion can trigger warnings; noise can conceal defects. Events beyond configured durations and subjective audibility remain limitations. Optional heuristic candidates remain WARNING. The independent digital signal-loss rule below defaults to FAIL for internal zero intervals and wholly silent files/channels.
 
 `--export-defect-snippets` writes one WAV per consolidated issue in `defect_snippets/` inside the report folder: one second before the full issue's first sample and one second after its last sample, clipped to source boundaries. A 5.1 issue affecting channels 1, 2 and 5 produces one six-channel snippet, preserving original channel count/order, rate and gain without downmixing. Evidence is converted to 32-bit float (high-resolution formats may have representational rounding). It does not inherit BWF metadata. Clicking an Evidence WAV link requests a new tab/window using `target="_blank" rel="noopener"`; local relative paths and the report CSP are retained. Browser settings may instead download the WAV; use a DAW/player if the browser cannot play multichannel float WAV. See `M31_VALIDATION.md` for consolidation and evidence validation.
 
@@ -354,7 +417,7 @@ Schema 4 adds `audio_compliance`, `execution_status`, `measurement_outcomes` and
 - The requested sample pass and requested Integrated/True Peak results must complete. Loudness enabled schedules Integrated and True Peak even in report-only mode; a True Peak limit alone schedules the same EBU pass, but Integrated is not required when loudness is disabled. LRA and maxima remain report-only; no new delivery limits are introduced.
 - Execution: `COMPLETED`, `COMPLETED_WITH_WARNINGS` (optional diagnostics), `PARTIAL` (required operation failed but sample results exist), or `FAILED` (no sample results, or required report export failed). An acoustic FAIL can coexist with completed execution. Incomplete analysis takes precedence in the overall compliance label; existing valid FAIL checks are never removed.
 - Requested evidence is a required output operation: an export error returns 2 and marks execution partial, retaining the original measurements, forensic events and acoustic status. It does not create an acoustic defect or artificial FAIL.
-- Silence remains numeric null with an `UNAVAILABLE` reason and existing QC WARNING semantics. It is not a process error. Malformed/non-finite metadata cannot reuse an earlier value to pass QC; negative-infinity logarithmic silence is distinguished from NaN/corrupt output.
+- Silent loudness remains numeric null with an `UNAVAILABLE` reason. The independent default MOS rule now makes a wholly silent file/channel FAIL; this is a delivery decision, not a measurement/process error. Malformed/non-finite metadata cannot reuse an earlier value to pass QC; negative-infinity logarithmic silence is distinguished from NaN/corrupt output.
 
 A report set is delivered only when its **QC_COMPLETE.json** marker exists, created atomically after all JSON/HTML/CSV files are written. The marker confirms report delivery, not successful QC: inspect its execution/compliance fields. A lone JSON or HTML may be a partial export. On report failure the CLI returns 2, never announces report success, and attempts an additional **QC_RECOVERY.json** snapshot with execution FAILED and preserved analysis. Recovery is best effort; full disks or denied permissions can prevent it too. Existing partial files are not overwritten.
 

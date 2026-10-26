@@ -83,7 +83,12 @@ def test_silence_quiet_and_tiny_are_unavailable_not_failed(tmp_path, config):
     for name, x in [("silent", np.zeros((48000, 1))), ("quiet", sine(amplitude=1e-6)), ("tiny", sine(.1))]:
         a = inspect_file(write_wav(tmp_path/f"{name}.wav", x), config)
         assert a.measurements.get("integrated_lufs") is None
-        assert a.status != Status.FAIL
+        assert a.measurement_outcomes['integrated_lufs'].state == 'UNAVAILABLE'
+        if name == 'silent':
+            assert a.status == Status.FAIL
+            assert any(c.code == 'signal_loss_total' and c.status == Status.FAIL for c in a.checks)
+        else:
+            assert a.status != Status.FAIL
 
 
 @pytest.mark.integration

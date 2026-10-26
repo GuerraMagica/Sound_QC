@@ -65,14 +65,15 @@ def fake_stream(lines):
 
 @pytest.mark.integration
 def test_valid_success_and_undefined_are_distinct(media, tmp_path):
-    for name, expected, state in [('valid', 'PASS', 'SUCCESS'), ('silent', 'WARNING', 'UNAVAILABLE')]:
+    for name, expected, state in [('valid', 'PASS', 'SUCCESS'), ('silent', 'FAIL', 'UNAVAILABLE')]:
         code, report, html = run(media[name], tmp_path/name)
         audio, = report['files']
-        assert code == 0 and report['audio_compliance'] == expected
+        assert code == (1 if name == 'silent' else 0) and report['audio_compliance'] == expected
         assert report['execution_status'] == 'COMPLETED'
         assert audio['measurement_outcomes']['integrated_lufs']['state'] == state
         assert state in html and not audio['operational_diagnostics']
         if name == 'silent':
+            assert any(c['code'] == 'signal_loss_total' and c['status'] == 'FAIL' for c in audio['checks'])
             assert audio['measurements']['integrated_lufs'] is None
             assert audio['measurements']['true_peak_dbtp'] is None
         else:

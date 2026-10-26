@@ -411,3 +411,13 @@ para generar evidencia; no se actualizan retrospectivamente. Los SHA-256 globale
 del experimento siguen siendo independientes y no se relajan. El control stat no
 es un bloqueo ni detecta toda modificación con atributos restaurados. No cambia
 el detector, la selección de parámetros ni los criterios de aceptación.
+
+### Compatibility with independent signal-loss checking (2026-10-26)
+
+The experimental baseline remains `2e74a097455dbb30cd2f2df312e078aeae35a426`.
+The production configuration now adds an independent `signal_loss` section, which
+the experiment does not execute. `click_experiment/audio.py` explicitly allows the
+reviewed configuration hash and checks a frozen copy of every `defects` default.
+The original configuration hash is preserved; detector, consolidation, issue and
+model hashes remain unchanged. This is configuration compatibility, not a new click
+baseline, parameter tuning or evidence of experimental detector efficacy.

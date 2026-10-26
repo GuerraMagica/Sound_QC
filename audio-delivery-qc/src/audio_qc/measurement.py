@@ -10,6 +10,7 @@ class MeasurementRequirements:
     hash: bool = False
     timeout_seconds: float | None = None
     levels_required: bool = True
+    signal_loss_options: dict | None = None
 
     @property
     def ebur128(self) -> bool:

@@ -23,6 +23,17 @@ BASELINE_HASHES = {
     'consolidation.py': '751e3b5b06c13ce5dbae95026f1d5a6369a1eb4a601842916a9f5115b660dae2',
     'models.py': '4c1326777d74000d3762644e920b317004046e1f38b4cb53b42d14c21b66102e',
 }
+# Reviewed compatibility: only the independent signal-loss configuration was added.
+# Detector options and all detector/consolidation/model source hashes remain frozen.
+SIGNAL_LOSS_CONFIG_HASH = '4e4092c3e6fca822783d6c46dad2d05666502531a4b0ba1152de544628ee2463'
+FROZEN_DEFECT_OPTIONS = {
+    'enabled': False, 'max_candidates': 1000, 'issues': {'cross_channel_merge_ms': 1.0},
+    'snippet_before_seconds': 1.0, 'snippet_after_seconds': 1.0,
+    'clicks': {'enabled': True, 'sensitivity': 'low', 'min_local_deviation_db': 12,
+               'max_duration_ms': 5, 'merge_gap_ms': 1.0},
+    'dropouts': {'enabled': True, 'zero_run_ms': 5, 'relative_level_drop_db': 30,
+                 'min_duration_ms': 2, 'max_duration_ms': 500, 'fail_zero_run_ms': None},
+}
 MAX_PCM_BYTES = 128 * 1024 * 1024
 
 
@@ -30,9 +41,13 @@ def check_baseline():
     import audio_qc
     root = Path(audio_qc.__file__).parent
     actual = {n: hashlib.sha256((root / n).read_bytes()).hexdigest() for n in BASELINE_HASHES}
-    if actual != BASELINE_HASHES:
+    accepted = dict(BASELINE_HASHES)
+    if actual['config.py'] == SIGNAL_LOSS_CONFIG_HASH:
+        accepted['config.py'] = SIGNAL_LOSS_CONFIG_HASH
+    if actual != accepted or load_config()['defects'] != FROZEN_DEFECT_OPTIONS:
         raise ValueError('Imported detector differs from the accepted experiment baseline; refusing a misleading comparison')
-    return {'commit': BASELINE_SHA, 'files': actual, 'import_path': str(root)}
+    return {'commit': BASELINE_SHA, 'files': actual, 'import_path': str(root),
+            'configuration_compatibility': 'Independent signal_loss settings; frozen detector options verified'}
 
 
 def fingerprint(path):

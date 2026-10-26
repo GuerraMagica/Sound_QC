@@ -25,6 +25,8 @@ BASE = {
     "expected_stems": [],
     "process_timeout_seconds": None,
     "timecode": {"frame_rate": "25", "source": "AUTO", "manual_start": None},
+    "signal_loss": {"enabled": True, "min_duration_ms": 5, "max_events": 1000,
+                    "fail_internal": True, "fail_total": True},
     "defects": {
         "enabled": False,
         "max_candidates": 1000,
@@ -132,6 +134,11 @@ def validate(c: dict) -> None:
     number(c["process_timeout_seconds"], "process_timeout_seconds", 1, 604800, True)
     if not isinstance(c["expected_stems"], list) or any(s not in ("DIA", "FX", "MX", "ME", "FULLMIX") for s in c["expected_stems"]):
         raise ConfigError("expected_stems must be a list using DIA, FX, MX, ME, FULLMIX", "expected_stems")
+    for key in ("enabled", "fail_internal", "fail_total"):
+        if type(c["signal_loss"][key]) is not bool:
+            raise ConfigError(f"signal_loss.{key} must be true or false", f"signal_loss.{key}")
+    number(c["signal_loss"]["min_duration_ms"], "signal_loss.min_duration_ms", 0.1, 86400000)
+    number(c["signal_loss"]["max_events"], "signal_loss.max_events", 1, 100000, integer=True)
     d = c["defects"]
     for name, section in [("defects", d), ("defects.clicks", d["clicks"]), ("defects.dropouts", d["dropouts"])]:
         if type(section["enabled"]) is not bool:

@@ -40,6 +40,11 @@ def test_gui_real_group_scan_and_validation_display(window, tmp_path):
     write_wav(source / "Missing_L.wav", defect_signals()["zero_dropout"], bext=True)
     window.source.setText(str(source))
     window.reset_groups()
+    deadline = time.monotonic()+10
+    while not window._preview.is_idle and time.monotonic() < deadline:
+        QApplication.processEvents()
+        QTest.qWait(10)
+    assert window._preview.is_idle
     assert "Mix (stereo" in window.group_preview.text()
     assert "L ← Mix_L.wav" in window.group_preview.text()
     window.defects.setChecked(True)
@@ -54,7 +59,8 @@ def test_gui_real_group_scan_and_validation_display(window, tmp_path):
     report = json.loads(window.report_path.with_suffix(".json").read_text())
     valid = next(g for g in report["programme_groups"] if g["name"] == "Mix")
     assert valid["validation_status"] == "VALID"
-    assert len(valid["issues"]) == 1
+    assert {e["event_type"] for e in valid["issues"]} == {"POSSIBLE DROPOUT", "DIGITAL SIGNAL LOSS"}
+    assert len(valid["issues"]) == 2
     assert valid["issues"][0]["channels"] == ["L", "R"]
     assert "Mix: VALID" in window.group_preview.text()
     assert "Missing: INCOMPLETE" in window.group_preview.text()

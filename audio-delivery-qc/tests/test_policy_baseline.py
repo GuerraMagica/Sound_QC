@@ -19,6 +19,8 @@ CASES = ('FILM_48K', 'BROADCAST_EBU_R128', 'CUSTOM', 'defects_and_zero_rule',
 
 def baseline_policy(case):
     config = load_config(preset=case if case in CASES[:3] else 'FILM_48K')
+    # Preserve the historical M3 policy, before the independent signal-loss rule.
+    config['signal_loss']['enabled'] = False
     if case == 'defects_and_zero_rule':
         config['defects']['enabled'] = True
         config['defects']['max_candidates'] = 1

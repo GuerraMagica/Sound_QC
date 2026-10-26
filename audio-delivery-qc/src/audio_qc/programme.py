@@ -278,7 +278,7 @@ def _build_group(definition, by_path, owners, enabled, tolerance, limit):
         coverage_reasons.append("Group validation prevents cross-file consolidation")
     for member, audio in audios:
         for check in audio.checks:
-            if check.code in ("defects_capped", "defects_unavailable"):
+            if check.code in ("defects_capped", "defects_unavailable", "signal_loss_records", "signal_loss_coverage"):
                 coverage_reasons.append(f"{member.channel}: {check.code}: {check.message}")
         if any(d.affects_analysis and d.code in ("readability", "inspection", "unexpected_inspection_error", "source_changed") for d in audio.operational_diagnostics):
             coverage_reasons.append(f"{member.channel}: incomplete source analysis")

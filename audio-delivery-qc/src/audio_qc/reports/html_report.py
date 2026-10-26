@@ -1,6 +1,7 @@
 from html import escape
 import json
 from urllib.parse import quote
+from ..signal_loss import METHOD as SIGNAL_LOSS_METHOD
 from .specification import specification_rows
 
 
@@ -47,11 +48,18 @@ def write_html(report, path):
                      f'File start TC: {start_label}</p>')
     cards = "".join(f'<div class="card"><strong>{s[k]}</strong><span>{esc("file-level issues" if k == "defect_issues" and report.get("programme_groups") else k.replace("_", " "))}</span></div>'
                     for k in ("total_files", "PASS", "WARNING", "FAIL", "INCOMPLETE", "defect_issues"))
-    rows, details = [], []
+    rows, details, loss_rows, loss_coverage = [], [], [], []
     grouped_paths = {m["file"] for g in report.get("programme_groups", [])
                      if g["valid_for_consolidation"] for m in g["members"]}
     for index, a in enumerate(report["files"], 1):
         m, b = a["measurements"], a["bwf"]
+        loss = m.get('signal_loss')
+        if loss:
+            loss_coverage.append(f"<li>{esc(a['filename'])}: scan {'COMPLETE' if loss['complete'] else 'INCOMPLETE'}; "
+                                 f"retained evidence {'INCOMPLETE (limit reached)' if loss['truncated'] else 'complete for recorded intervals'}; "
+                                 f"{loss['checked_sample_frames']} sample frames checked.</li>")
+        elif report['configuration'].get('signal_loss', {}).get('enabled'):
+            loss_coverage.append(f"<li>{esc(a['filename'])}: INCOMPLETE — signal-loss measurement unavailable.</li>")
         origin = a["timecode_reporting"]
         origin_line = (f'<p>TC source: <b>{esc(origin["source_label"])}</b> · File start TC: '
                        f'{tc_label(origin["file_start_timecode"], origin["file_start_day_offset"])} · '
@@ -75,6 +83,13 @@ def write_html(report, path):
         events = []
         for e in a["defects"]:
             snippet = (f'<a href="{quote(e["snippet"], safe="/")}" target="_blank" rel="noopener">Evidence WAV</a>' if e["snippet"] else "—")
+            if e['detection_method'] == SIGNAL_LOSS_METHOD:
+                loss_rows.append(f"<tr><td>{badge(e['severity'])}</td><td>{esc(a['filename'])}</td>"
+                                 f"<td>{esc(e['event_type'])}</td><td>{esc(', '.join(map(str, e['channels'])))}</td>"
+                                 f"<td>{tc_label(e['timecode'], e['timecode_day_offset'])}</td>"
+                                 f"<td>{tc_label(e.get('end_timecode_exclusive'), e.get('end_timecode_day_offset'))}</td>"
+                                 f"<td>{e['duration_seconds']:.6f}</td><td>{e['sample_index']}–{e['measurements']['end_sample_exclusive']} (exclusive)</td>"
+                                 f"<td>{snippet}</td></tr>")
             evidence = {"sample_index": e["sample_index"], "timestamp_seconds": e["timestamp_seconds"],
                         "timecode_basis": e["timecode_basis"], "timecode_frame_rate": e["timecode_frame_rate"],
                         "timecode_day_offset": e["timecode_day_offset"],
@@ -103,6 +118,14 @@ def write_html(report, path):
     groups = "".join(f'<li>{badge(c["status"])} <b>{esc(c["code"])}</b> · {esc(c["message"])}'
                      + (f'<details><summary>Affected files ({len(c["files"])})</summary><pre>{esc(chr(10).join(c["files"]))}</pre></details>' if c["files"] else "") + '</li>' for c in report["group_checks"])
     operational = "".join(f'<li><b>{esc(d["code"])}</b> · {esc(d["message"])}</li>' for d in report["operational_diagnostics"])
+    loss_section = ('<h2>Digital signal loss / MOS (Missing of sound)</h2>'
+                    '<p>Physical-file check, independent of the click candidate limit. Exact digital zero only; '
+                    'intent cannot be inferred. Internal cuts and wholly silent files/channels follow the explicit failure rule. '
+                    'Leading/trailing silence is informational. These rows are also retained in file evidence; do not sum the views.</p>'
+                    '<ul>' + ''.join(loss_coverage) + '</ul>'
+                    '<div class="scroll"><table><thead><tr><th>Severity</th><th>File</th><th>Type</th><th>Channels</th>'
+                    '<th>Start TC</th><th>End TC (exclusive)</th><th>Duration (s)</th><th>Exact sample interval</th><th>Evidence</th>'
+                    '</tr></thead><tbody>' + ''.join(loss_rows) + '</tbody></table></div>') if loss_coverage else ''
     html = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; media-src 'self' file:; base-uri 'none'; form-action 'none'">
@@ -131,6 +154,7 @@ footer{{margin-top:32px;color:var(--muted);font-size:12px}}@media(max-width:800p
 <p>Frame rate is a reporting setting. TC and File start TC are derived navigation labels, not timecode metadata embedded in the WAV. TC identifies the video frame containing the exact sample. Offset is file-relative (milliseconds). The authoritative sample index and full timestamp remain in Evidence and JSON. TC wraps at 24 hours; any extra days are shown separately.</p>
 <p>Defect issues group same-type channel events from one source within the configured start tolerance. Length, TC and method describe the earliest channel representative; Evidence retains every channel event and the full sample extent. One Evidence WAV preserves the original multichannel context.</p>
 <p>PASS: configured checks satisfied · WARNING: review required · FAIL: configured audio/technical rule violated · INCOMPLETE: required analysis could not finish; valid findings remain listed · INFO: observation. Execution and operational diagnostics are separate from compliance. Status counts describe files; defect issues count report rows. Group warnings also affect the overall status. “—” means unavailable.</p>
+{loss_section}
 {programme_html(report)}
 <h2>Physical-file overview</h2><div class="scroll"><table><thead><tr><th>Status</th><th>File / details</th><th>Duration (s)</th><th>Rate (Hz)</th><th>Bits</th><th>Physical channels/file</th><th>Layout</th><th>Peak (dBFS)</th><th>TP (dBTP)</th><th>I (LUFS, file)</th><th>LRA (LU)</th><th>BEXT</th><th>TimeReference</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 <h2>Operational diagnostics</h2><ul>{operational or "<li>No scan-level operational diagnostics.</li>"}</ul><p>{esc(report["report_delivery"])}</p>

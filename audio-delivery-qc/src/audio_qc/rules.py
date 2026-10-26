@@ -6,6 +6,10 @@ planned here; presets have already resolved into the same validated shape.
 from copy import deepcopy
 from dataclasses import replace
 
+from fractions import Fraction
+from math import ceil
+
+from .signal_loss import METHOD as SIGNAL_LOSS_METHOD
 from .measurement import MeasurementContext, MeasurementRequirements
 from .models import AudioFile, Check, Status, Defect, MeasurementState as MS
 
@@ -20,7 +24,10 @@ def measurement_requirements(policy: dict, with_hash=False) -> MeasurementRequir
     return MeasurementRequirements(loudness=policy["loudness"]["enabled"],
                                    true_peak=policy["loudness"]["enabled"] or policy["true_peak"]["maximum"] is not None,
                                    defect_options=options, hash=with_hash,
-                                   timeout_seconds=policy["process_timeout_seconds"])
+                                   timeout_seconds=policy["process_timeout_seconds"],
+                                   signal_loss_options=({k: policy["signal_loss"][k] for k in
+                                                         ("min_duration_ms", "max_events")}
+                                                        if policy["signal_loss"]["enabled"] else None))
 
 
 def evaluate_level_policy(m: dict, c: dict, outcomes=None) -> list[Check]:
@@ -67,7 +74,7 @@ def _evaluate_file(a: AudioFile, c: dict, context: MeasurementContext, level_sco
     # Policy-created zero-run evidence is regenerated from technical run facts,
     # never counted as an extra raw detector candidate on re-evaluation.
     defects = [replace(e, severity=Status.WARNING if e.severity is None else e.severity)
-               for e in a.defects if e.detection_method != "exact_zero_samples+explicit_failure_rule"]
+               for e in a.defects if e.detection_method not in ("exact_zero_samples+explicit_failure_rule", SIGNAL_LOSS_METHOD)]
     def add(code, status, message):
         checks.append(Check(code, status, message))
     if a.sample_rate:
@@ -135,6 +142,32 @@ def _evaluate_file(a: AudioFile, c: dict, context: MeasurementContext, level_sco
                                        {"zero_samples": run.longest, "configured_failure_ms": threshold},
                                        "exact_zero_samples+explicit_failure_rule"))
 
+    loss = c["signal_loss"]
+    if loss["enabled"]:
+        facts = m.get("signal_loss", {})
+        minimum = max(1, ceil(Fraction(str(loss["min_duration_ms"])) * (a.sample_rate or 1) / 1000))
+        compatible = facts.get("min_samples") == minimum
+        if not facts.get("complete") or not compatible:
+            add("signal_loss_coverage", Status.INCOMPLETE,
+                "Digital signal-loss scan incomplete, missing, or measured with a different duration setting")
+        counts = facts.get("channel_event_counts", {})
+        for kind, rule in (("INTERNAL", "fail_internal"), ("TOTAL", "fail_total")):
+            count = counts.get(kind, 0)
+            add("signal_loss_" + kind.lower(),
+                (Status.FAIL if loss[rule] else Status.WARNING) if count else Status.INFO,
+                f"{count} {kind.lower()} digital-zero channel intervals; "
+                + (f"configured rule: {'FAIL' if loss[rule] else 'WARNING'}. " if count else "")
+                + "Digital absence is measured; intent cannot be inferred.")
+        if facts.get("truncated"):
+            add("signal_loss_records", Status.WARNING,
+                f"Signal-loss detail limit reached: {facts['omitted_channel_events']} channel intervals omitted; "
+                "scan and failure counts continue, retained evidence coverage is INCOMPLETE")
+        for event in a.defects:
+            if event.detection_method == SIGNAL_LOSS_METHOD:
+                kind = event.measurements['kind']
+                rule = {'INTERNAL': 'fail_internal', 'TOTAL': 'fail_total'}.get(kind)
+                severity = (Status.FAIL if loss[rule] else Status.WARNING) if rule else Status.INFO
+                defects.append(replace(event, severity=severity))
     return checks, defects
 
 

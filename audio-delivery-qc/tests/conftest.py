@@ -39,7 +39,9 @@ def qapp():
 
 @pytest.fixture
 def make_window(qapp):
+    import time
     from PySide6.QtCore import QCoreApplication, QEvent, QProcess
+    from PySide6.QtTest import QTest
     from shiboken6 import isValid
     from audio_qc.gui_window import QCWindow
 
@@ -56,6 +58,11 @@ def make_window(qapp):
             window.process.kill()
             window.process.waitForFinished(5000)
         window.close()
+        deadline = time.monotonic() + 5
+        while not window._preview.is_idle and time.monotonic() < deadline:
+            qapp.processEvents()
+            QTest.qWait(5)
+        assert window._preview.is_idle, 'Preview auxiliary did not stop on close'
         window.deleteLater()
     # processEvents alone does not deliver DeferredDelete without app.exec().
     # Keep Python references alive until Qt has deleted every window/child.
